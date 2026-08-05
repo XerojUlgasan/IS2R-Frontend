@@ -6,6 +6,7 @@ import AppLayout from "./components/AppLayout";
 
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import MyBusinesses from "./pages/MyBusinesses";
 import Dashboard from "./pages/Dashboard";
 import Materials from "./pages/Materials";
@@ -23,6 +24,7 @@ function App() {
         {/* Public / standalone pages */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/my-businesses" element={<MyBusinesses />} />
 
         {/* Authenticated app shell (sidebar + header) */}

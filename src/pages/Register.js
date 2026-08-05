@@ -2,41 +2,52 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
-function Login() {
+function Register() {
   const navigate = useNavigate();
-  // Auth states: idle -> authenticating -> granted (then redirect).
+  // Auth states: idle -> registering -> created (then redirect).
   const [status, setStatus] = useState("idle");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (status !== "idle") return;
     setError("");
-    setStatus("authenticating");
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setStatus("registering");
+
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { full_name: name },
+      },
     });
 
-    if (signInError) {
-      setError(signInError.message);
+    if (signUpError) {
+      setError(signUpError.message);
       setStatus("idle");
       return;
     }
 
-    setStatus("granted");
-    // Continue into the app once access is granted.
+    setStatus("created");
+    // Route to login once the account has been provisioned.
     setTimeout(() => {
-      navigate("/my-businesses");
-    }, 1000);
+      navigate("/login");
+    }, 1200);
   };
 
-  const buttonBg = status === "granted" ? "bg-surface-container-lowest" : "bg-primary";
-  const buttonText = status === "granted" ? "text-primary" : "text-on-primary";
-  const buttonLock = status === "authenticating" ? "opacity-80 pointer-events-none" : "";
+  const buttonBg = status === "created" ? "bg-surface-container-lowest" : "bg-primary";
+  const buttonText = status === "created" ? "text-primary" : "text-on-primary";
+  const buttonLock = status === "registering" ? "opacity-80 pointer-events-none" : "";
 
   return (
     <main className="w-full max-w-lg mx-auto bg-surface min-h-screen flex items-center justify-center font-body-md">
@@ -56,14 +67,30 @@ function Login() {
               IS²R
             </h1>
             <p className="font-body-sm text-body-sm text-on-surface-variant uppercase tracking-widest mt-xs">
-              System Access
+              Request Clearance
             </p>
           </div>
           {/* Form Container */}
           <div className="bg-surface-container border border-outline-variant p-lg rounded-none">
-            <form className="flex flex-col gap-md" id="loginForm" onSubmit={handleSubmit}>
-              {/* Email Input */}
+            <form className="flex flex-col gap-md" id="registerForm" onSubmit={handleSubmit}>
+              {/* Full Name Input */}
               <div className="flex flex-col gap-xs relative group">
+                <label className="font-label-md text-label-md text-on-surface-variant uppercase" htmlFor="name">
+                  Full Name
+                </label>
+                <input
+                  className="w-full bg-surface-container-lowest border border-outline text-on-background font-body-md text-body-md p-md rounded-none focus:outline-none focus:border-primary focus:border-2 transition-all duration-100 placeholder:text-on-surface-variant/50"
+                  id="name"
+                  name="name"
+                  placeholder="Jane Operator"
+                  required
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              {/* Email Input */}
+              <div className="flex flex-col gap-xs relative group mt-sm">
                 <label className="font-label-md text-label-md text-on-surface-variant uppercase" htmlFor="email">
                   Email Address
                 </label>
@@ -80,14 +107,9 @@ function Login() {
               </div>
               {/* Password Input */}
               <div className="flex flex-col gap-xs relative group mt-sm">
-                <div className="flex justify-between items-end">
-                  <label className="font-label-md text-label-md text-on-surface-variant uppercase" htmlFor="password">
-                    Password
-                  </label>
-                  <button className="font-label-md text-[10px] text-primary underline uppercase" tabIndex={-1} type="button">
-                    Reset
-                  </button>
-                </div>
+                <label className="font-label-md text-label-md text-on-surface-variant uppercase" htmlFor="password">
+                  Password
+                </label>
                 <input
                   className="w-full bg-surface-container-lowest border border-outline text-on-background font-body-md text-body-md p-md rounded-none focus:outline-none focus:border-primary focus:border-2 transition-all duration-100 placeholder:text-on-surface-variant/50"
                   id="password"
@@ -97,6 +119,22 @@ function Login() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              {/* Confirm Password Input */}
+              <div className="flex flex-col gap-xs relative group mt-sm">
+                <label className="font-label-md text-label-md text-on-surface-variant uppercase" htmlFor="confirmPassword">
+                  Confirm Password
+                </label>
+                <input
+                  className="w-full bg-surface-container-lowest border border-outline text-on-background font-body-md text-body-md p-md rounded-none focus:outline-none focus:border-primary focus:border-2 transition-all duration-100 placeholder:text-on-surface-variant/50"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  placeholder="••••••••"
+                  required
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                 />
               </div>
               {/* Error Message */}
@@ -113,36 +151,36 @@ function Login() {
               >
                 {status === "idle" && (
                   <>
-                    Initialize Login
+                    Create Account
                     <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
                       arrow_forward
                     </span>
                   </>
                 )}
-                {status === "authenticating" && (
+                {status === "registering" && (
                   <>
                     <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span>
-                    <span className="ml-sm">Authenticating...</span>
+                    <span className="ml-sm">Provisioning...</span>
                   </>
                 )}
-                {status === "granted" && (
+                {status === "created" && (
                   <>
                     <span className="material-symbols-outlined text-[18px]">check</span>
-                    <span className="ml-sm">Access Granted</span>
+                    <span className="ml-sm">Account Created</span>
                   </>
                 )}
               </button>
             </form>
           </div>
-          {/* Registration Link */}
+          {/* Login Link */}
           <div className="mt-lg text-center border-t border-outline-variant pt-lg">
             <p className="font-body-sm text-body-sm text-on-surface-variant">
-              No account?{" "}
+              Already have an account?{" "}
               <Link
                 className="text-primary font-label-md uppercase underline ml-xs hover:text-on-background transition-colors"
-                to="/register"
+                to="/login"
               >
-                Create one
+                Sign in
               </Link>
             </p>
           </div>
@@ -150,9 +188,9 @@ function Login() {
         {/* Decorative technical marks */}
         <div className="absolute top-lg left-lg hidden md:block">
           <div className="font-label-md text-[10px] text-on-surface-variant uppercase opacity-50 tracking-widest leading-loose">
-            SEQ: 091-A<br />
+            SEQ: 092-B<br />
             TGT: MNL-SYS<br />
-            STATUS: STANDBY
+            STATUS: ENROLL
           </div>
         </div>
         <div className="absolute bottom-lg right-lg hidden md:block">
@@ -169,4 +207,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default Register;
