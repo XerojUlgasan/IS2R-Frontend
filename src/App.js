@@ -7,7 +7,7 @@ import AppLayout from "./components/AppLayout";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import MyBusinesses from "./pages/MyBusinesses";
+import WorkspacesPage from "./pages/WorkspacesPage";
 import Dashboard from "./pages/Dashboard";
 import Materials from "./pages/Materials";
 import SalesHistory from "./pages/SalesHistory";
@@ -25,7 +25,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/my-businesses" element={<MyBusinesses />} />
+        <Route path="/my-businesses" element={<WorkspacesPage />} />
 
         {/* Authenticated app shell (sidebar + header) */}
         <Route element={<AppLayout />}>

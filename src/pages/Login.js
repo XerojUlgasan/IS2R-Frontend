@@ -16,7 +16,7 @@ function Login() {
     setError("");
     setStatus("authenticating");
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -25,6 +25,12 @@ function Login() {
       setError(signInError.message);
       setStatus("idle");
       return;
+    }
+
+    // Bridge auth for the dev backend stub, which reads the x-user-id header.
+    // Swap this for the Supabase JWT (Bearer token) once real middleware lands.
+    if (data?.user?.id) {
+      localStorage.setItem("dev_user_id", data.user.id);
     }
 
     setStatus("granted");
