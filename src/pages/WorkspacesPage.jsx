@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBusinesses } from "../hooks/useBusinesses";
+import { useActiveBusiness } from "../context/ActiveBusinessContext";
 import BusinessList from "../components/BusinessList";
 import CreateBusinessForm from "../components/CreateBusinessForm";
 
@@ -8,6 +9,7 @@ import CreateBusinessForm from "../components/CreateBusinessForm";
 function WorkspacesPage() {
   const navigate = useNavigate();
   const { businesses, loading, error, refetch, addBusiness } = useBusinesses();
+  const { setActiveBusiness } = useActiveBusiness();
   const [showCreate, setShowCreate] = useState(false);
 
   const goToLogin = useCallback(() => navigate("/login"), [navigate]);
@@ -17,9 +19,15 @@ function WorkspacesPage() {
     if (error && error.status === 401) goToLogin();
   }, [error, goToLogin]);
 
-  // Selecting a workspace sets the active business, then enters the app.
+  // Selecting a workspace stores the chosen business (id, name, logo, role) for
+  // use across the app, then enters the app.
   const handleSelect = (business) => {
-    localStorage.setItem("active_business_id", business.id);
+    setActiveBusiness({
+      id: business.id,
+      name: business.name,
+      logo_img_loc: business.logo_img_loc,
+      role: business.role,
+    });
     navigate("/dashboard");
   };
 

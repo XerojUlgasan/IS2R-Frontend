@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 
+import { ActiveBusinessProvider } from "./context/ActiveBusinessContext";
 import AppLayout from "./components/AppLayout";
 
 import Landing from "./pages/Landing";
@@ -20,7 +21,8 @@ import ComingSoon from "./pages/ComingSoon";
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <ActiveBusinessProvider>
+        <Routes>
         {/* Public / standalone pages */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
@@ -31,6 +33,7 @@ function App() {
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/inventory-materials" element={<Materials />} />
+          <Route path="/inventory-stocks" element={<ComingSoon title="Stocks" />} />
           <Route path="/sales-history" element={<SalesHistory />} />
           <Route path="/sales-reports" element={<SalesReports />} />
           <Route path="/members" element={<Members />} />
@@ -41,9 +44,10 @@ function App() {
           <Route path="/invitations" element={<ComingSoon title="Invitations" />} />
         </Route>
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ActiveBusinessProvider>
     </BrowserRouter>
   );
 }

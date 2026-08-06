@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink, Link } from "react-router-dom";
+import { useActiveBusiness } from "../context/ActiveBusinessContext";
 
 // Navigation groups mirror the original design's sidebar structure exactly.
 const NAV_GROUPS = [
@@ -9,7 +10,10 @@ const NAV_GROUPS = [
   },
   {
     label: "Inventory",
-    items: [{ to: "/inventory-materials", icon: "inventory_2", text: "Materials" }],
+    items: [
+      { to: "/inventory-materials", icon: "inventory_2", text: "Materials" },
+      { to: "/inventory-stocks", icon: "package_2", text: "Stocks" },
+    ],
   },
   {
     label: "Finance",
@@ -40,16 +44,27 @@ const ACTIVE_CLASSES = "bg-primary text-on-primary";
 const INACTIVE_CLASSES = "hover:bg-surface-container-highest";
 
 function Sidebar() {
+  const { activeBusiness } = useActiveBusiness();
+  const businessName = activeBusiness?.name || "No workspace selected";
+
   return (
     <aside className="fixed left-0 top-0 h-screen w-72 bg-surface-container border-r border-outline-variant flex flex-col z-50 transition-all duration-300">
       <div className="p-lg flex flex-col gap-sm border-b border-outline-variant bg-surface-bright">
         <div className="flex items-center gap-md">
-          <div className="w-10 h-10 bg-primary flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary">token</span>
+          <div className="w-10 h-10 bg-primary flex items-center justify-center overflow-hidden shrink-0">
+            {activeBusiness?.logo_img_loc ? (
+              <img
+                className="w-full h-full object-cover"
+                alt={`${businessName} logo`}
+                src={activeBusiness.logo_img_loc}
+              />
+            ) : (
+              <span className="material-symbols-outlined text-on-primary">token</span>
+            )}
           </div>
           <div className="flex-1 overflow-hidden">
             <h1 className="font-headline-md text-label-md uppercase tracking-widest text-primary truncate">IS²R</h1>
-            <p className="font-body-sm text-on-surface-variant truncate">PrintMaster QC</p>
+            <p className="font-body-sm text-on-surface-variant truncate">{businessName}</p>
           </div>
           <Link to="/my-businesses" title="Switch business">
             <span className="material-symbols-outlined text-on-surface-variant cursor-pointer">unfold_more</span>
