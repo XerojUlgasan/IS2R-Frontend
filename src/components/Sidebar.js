@@ -19,7 +19,6 @@ const NAV_GROUPS = [
     label: "Finance",
     items: [
       { to: "/sales-history", icon: "history", text: "Sales History" },
-      { to: "/pending-payments", icon: "payments", text: "Pending Payments" },
     ],
   },
   {
@@ -33,7 +32,6 @@ const NAV_GROUPS = [
     label: "Administration",
     items: [
       { to: "/members", icon: "group", text: "Members" },
-      { to: "/invitations", icon: "mail", text: "Invitations" },
       { to: "/audit-logs", icon: "receipt_long", text: "Audit Logs" },
       { to: "/business-settings", icon: "settings", text: "Business Settings" },
     ],

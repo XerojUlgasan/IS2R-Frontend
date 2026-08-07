@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import WorkspacesPage from "./pages/WorkspacesPage";
 import Dashboard from "./pages/Dashboard";
 import Materials from "./pages/Materials";
+import Stocks from "./pages/Stocks";
 import SalesHistory from "./pages/SalesHistory";
 import SalesReports from "./pages/SalesReports";
 import Members from "./pages/Members";
@@ -33,7 +34,7 @@ function App() {
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/inventory-materials" element={<Materials />} />
-          <Route path="/inventory-stocks" element={<ComingSoon title="Stocks" />} />
+          <Route path="/inventory-stocks" element={<Stocks />} />
           <Route path="/sales-history" element={<SalesHistory />} />
           <Route path="/sales-reports" element={<SalesReports />} />
           <Route path="/members" element={<Members />} />
