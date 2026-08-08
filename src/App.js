@@ -14,6 +14,8 @@ import Materials from "./pages/Materials";
 import Stocks from "./pages/Stocks";
 import SalesHistory from "./pages/SalesHistory";
 import SalesReports from "./pages/SalesReports";
+import Expenses from "./pages/Expenses";
+import InventoryReports from "./pages/InventoryReports";
 import Members from "./pages/Members";
 import AuditLogs from "./pages/AuditLogs";
 import BusinessSettings from "./pages/BusinessSettings";
@@ -40,8 +42,9 @@ function App() {
           <Route path="/members" element={<Members />} />
           <Route path="/audit-logs" element={<AuditLogs />} />
           <Route path="/business-settings" element={<BusinessSettings />} />
+          <Route path="/expenses" element={<Expenses />} />
           <Route path="/pending-payments" element={<ComingSoon title="Pending Payments" />} />
-          <Route path="/inventory-reports" element={<ComingSoon title="Inventory Reports" />} />
+          <Route path="/inventory-reports" element={<InventoryReports />} />
           <Route path="/invitations" element={<ComingSoon title="Invitations" />} />
         </Route>
 

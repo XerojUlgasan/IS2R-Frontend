@@ -25,6 +25,14 @@ export const PERMISSION_GROUPS = [
       { key: "sale.delete", label: "Delete sales" },
     ],
   },
+  {
+    label: "Expenses",
+    permissions: [
+      { key: "expense.create", label: "Add expenses" },
+      { key: "expense.update", label: "Update expenses" },
+      { key: "expense.delete", label: "Delete expenses" },
+    ],
+  },
 ];
 
 // Flat list of every permission key (handy for defaults / validation).

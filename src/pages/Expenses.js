@@ -1,15 +1,15 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useActiveBusiness } from "../context/ActiveBusinessContext";
-import { useSales, SALES_PAGE_SIZE } from "../hooks/useSales";
+import { useExpenses, EXPENSES_PAGE_SIZE } from "../hooks/useExpenses";
 import { usePermissions } from "../hooks/usePermissions";
-import { SALE_STATUS_OPTIONS } from "../constants/saleOptions";
-import RecordSaleModal from "../components/sales/RecordSaleModal";
-import SalesFiltersModal from "../components/sales/SalesFiltersModal";
-import DeleteSaleDialog from "../components/sales/DeleteSaleDialog";
-import MarkPaidDialog from "../components/sales/MarkPaidDialog";
+import { EXPENSE_CATEGORY_OPTIONS } from "../constants/expenseOptions";
+import RecordExpenseModal from "../components/expenses/RecordExpenseModal";
+import EditExpenseModal from "../components/expenses/EditExpenseModal";
+import ExpensesFiltersModal from "../components/expenses/ExpensesFiltersModal";
+import DeleteExpenseDialog from "../components/expenses/DeleteExpenseDialog";
 
-const EMPTY_FILTERS = { status: "", materialId: "", dateFrom: "", dateTo: "", material: null };
+const EMPTY_FILTERS = { category: "", dateFrom: "", dateTo: "" };
 
 function formatAmount(value) {
   if (value === null || value === undefined || value === "") return "—";
@@ -25,37 +25,21 @@ function formatDate(value) {
   return d.toLocaleDateString(undefined, { year: "numeric", month: "2-digit", day: "2-digit" });
 }
 
-function statusLabel(value) {
-  const opt = SALE_STATUS_OPTIONS.find((o) => o.value === String(value).toUpperCase());
+function categoryLabel(value) {
+  const opt = EXPENSE_CATEGORY_OPTIONS.find((o) => o.value === String(value).toUpperCase());
   return opt ? opt.label : value || "—";
 }
 
-function SaleStatusBadge({ status }) {
-  const s = String(status || "").toUpperCase();
-  if (s === "PAID") {
-    return (
-      <span className="inline-block px-sm py-xs bg-primary text-on-primary font-label-md text-[10px] uppercase tracking-widest">
-        Paid
-      </span>
-    );
-  }
-  return (
-    <span className="inline-block px-sm py-xs border border-primary text-primary font-label-md text-[10px] uppercase tracking-widest">
-      {statusLabel(status)}
-    </span>
-  );
-}
-
-function SalesHistory() {
+function Expenses() {
   const navigate = useNavigate();
   const { activeBusiness } = useActiveBusiness();
   const businessId = activeBusiness?.id;
 
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
-  const [modal, setModal] = useState(null); // "record" | "filters" | { type: "delete", sale }
+  const [modal, setModal] = useState(null); // "record" | "filters" | { type: "edit"|"delete", expense }
 
-  const { sales, total, totalPages, loading, error, refetch } = useSales(businessId, page, filters);
+  const { expenses, total, totalPages, loading, error, refetch } = useExpenses(businessId, page, filters);
   const { can } = usePermissions();
 
   const goToLogin = useCallback(() => navigate("/login"), [navigate]);
@@ -73,8 +57,6 @@ function SalesHistory() {
   const removeFilter = (key) => {
     if (key === "date") {
       setFilters((f) => ({ ...f, dateFrom: "", dateTo: "" }));
-    } else if (key === "material") {
-      setFilters((f) => ({ ...f, materialId: "", material: null }));
     } else {
       setFilters((f) => ({ ...f, [key]: "" }));
     }
@@ -92,17 +74,17 @@ function SalesHistory() {
   };
 
   const hasDateFilter = filters.dateFrom || filters.dateTo;
-  const hasActiveFilters = filters.status || filters.materialId || hasDateFilter;
+  const hasActiveFilters = filters.category || hasDateFilter;
   const dateChipLabel = `${filters.dateFrom || "…"} → ${filters.dateTo || "…"}`;
 
   // No workspace chosen yet.
   if (!businessId) {
     return (
       <div className="flex flex-col items-center justify-center gap-md min-h-[60vh] text-center">
-        <span className="material-symbols-outlined text-[32px] text-primary">history</span>
+        <span className="material-symbols-outlined text-[32px] text-primary">payments</span>
         <h2 className="font-headline-md text-headline-md text-primary">No workspace selected</h2>
         <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
-          Choose a business to view its sales ledger.
+          Choose a business to view its expense ledger.
         </p>
         <Link
           to="/my-businesses"
@@ -119,9 +101,9 @@ function SalesHistory() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-md mb-md">
         <div>
-          <h1 className="font-headline-lg text-headline-lg text-primary tracking-tighter uppercase mb-xs">Sales Ledger</h1>
+          <h1 className="font-headline-lg text-headline-lg text-primary tracking-tighter uppercase mb-xs">Expenses Ledger</h1>
           <p className="font-body-md text-body-md text-on-surface-variant max-w-xl">
-            Historical record of material usage and associated charges. Review payment statuses and manage outstanding balances.
+            Historical record of business expenses. Review payment statuses and manage outstanding balances.
           </p>
         </div>
         <div className="flex items-center gap-sm">
@@ -134,12 +116,12 @@ function SalesHistory() {
           </button>
           <button
             onClick={() => setModal("record")}
-            disabled={!can("create_sales")}
-            title={can("create_sales") ? "Record Sale" : "You don't have permission to record sales"}
+            disabled={!can("add_expense")}
+            title={can("add_expense") ? "Record Expense" : "You don't have permission to add expenses"}
             className="h-10 px-md bg-primary flex items-center justify-center gap-xs text-on-primary font-label-md text-label-md uppercase tracking-widest hover:bg-surface-container hover:text-primary hover:border hover:border-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:hover:text-on-primary disabled:hover:border-0"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
-            Record Sale
+            Record Expense
           </button>
         </div>
       </div>
@@ -149,22 +131,16 @@ function SalesHistory() {
         <div className="col-span-1 md:col-span-3 flex flex-wrap items-center gap-sm p-sm bg-surface-container-low border border-primary/20 min-h-[48px]">
           <span className="font-label-md text-label-md text-on-surface-variant uppercase ml-xs">Active Filters:</span>
           {!hasActiveFilters && <span className="font-body-sm text-body-sm text-on-surface-variant">None</span>}
-          {filters.status && (
+          {filters.category && (
             <div className="flex items-center gap-xs px-sm py-xs bg-surface border border-outline-variant">
-              <span className="font-label-md text-label-md text-primary">Status: {statusLabel(filters.status)}</span>
-              <span onClick={() => removeFilter("status")} className="material-symbols-outlined text-[14px] text-on-surface-variant cursor-pointer hover:text-error">close</span>
+              <span className="font-label-md text-label-md text-primary">Category: {categoryLabel(filters.category)}</span>
+              <span onClick={() => removeFilter("category")} className="material-symbols-outlined text-[14px] text-on-surface-variant cursor-pointer hover:text-error">close</span>
             </div>
           )}
           {hasDateFilter && (
             <div className="flex items-center gap-xs px-sm py-xs bg-surface border border-outline-variant">
               <span className="font-label-md text-label-md text-primary">Date: {dateChipLabel}</span>
               <span onClick={() => removeFilter("date")} className="material-symbols-outlined text-[14px] text-on-surface-variant cursor-pointer hover:text-error">close</span>
-            </div>
-          )}
-          {filters.materialId && (
-            <div className="flex items-center gap-xs px-sm py-xs bg-surface border border-outline-variant">
-              <span className="font-label-md text-label-md text-primary">Material: {filters.material?.name || "Selected"}</span>
-              <span onClick={() => removeFilter("material")} className="material-symbols-outlined text-[14px] text-on-surface-variant cursor-pointer hover:text-error">close</span>
             </div>
           )}
           {hasActiveFilters && (
@@ -184,10 +160,9 @@ function SalesHistory() {
           <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-surface-container border-b border-primary">
-                <th className="p-md font-label-md text-label-md text-primary uppercase tracking-widest w-[180px]">Material</th>
-                <th className="p-md font-label-md text-label-md text-primary uppercase tracking-widest text-right">Qty Used</th>
-                <th className="p-md font-label-md text-label-md text-primary uppercase tracking-widest text-right">Total (₱)</th>
-                <th className="p-md font-label-md text-label-md text-primary uppercase tracking-widest text-center w-[120px]">Status</th>
+                <th className="p-md font-label-md text-label-md text-primary uppercase tracking-widest w-[200px]">Title</th>
+                <th className="p-md font-label-md text-label-md text-primary uppercase tracking-widest">Category</th>
+                <th className="p-md font-label-md text-label-md text-primary uppercase tracking-widest text-right">Amount (₱)</th>
                 <th className="p-md font-label-md text-label-md text-primary uppercase tracking-widest max-w-[200px]">Remarks</th>
                 <th className="p-md font-label-md text-label-md text-primary uppercase tracking-widest">Created By</th>
                 <th className="p-md font-label-md text-label-md text-primary uppercase tracking-widest w-[140px]">Date</th>
@@ -197,16 +172,16 @@ function SalesHistory() {
             <tbody className="font-body-sm text-body-sm text-on-surface">
               {loading && (
                 <tr>
-                  <td colSpan={8} className="p-xl text-center text-on-surface-variant">
+                  <td colSpan={7} className="p-xl text-center text-on-surface-variant">
                     <span className="material-symbols-outlined animate-spin align-middle mr-sm">refresh</span>
-                    Loading sales...
+                    Loading expenses...
                   </td>
                 </tr>
               )}
 
               {!loading && error && error.status !== 401 && (
                 <tr>
-                  <td colSpan={8} className="p-xl text-center">
+                  <td colSpan={7} className="p-xl text-center">
                     <div className="flex flex-col items-center gap-md">
                       <span className="material-symbols-outlined text-[32px] text-error">error</span>
                       <p className="font-body-md text-on-surface">{error.message || "Something went wrong, try again."}</p>
@@ -222,50 +197,43 @@ function SalesHistory() {
                 </tr>
               )}
 
-              {!loading && !error && sales.length === 0 && (
+              {!loading && !error && expenses.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="p-xl text-center text-on-surface-variant">
-                    {hasActiveFilters ? "No sales match the current filters." : "No sales recorded yet."}
+                  <td colSpan={7} className="p-xl text-center text-on-surface-variant">
+                    {hasActiveFilters ? "No expenses match the current filters." : "No expenses recorded yet."}
                   </td>
                 </tr>
               )}
 
               {!loading &&
                 !error &&
-                sales.map((sale) => {
-                  const materialName = sale.material_name || sale.material?.name || "Untitled material";
-                  const isPaid = String(sale.status || "").toUpperCase() === "PAID";
-                  const createdBy = sale.created_by_name || sale.createdByName || "—";
+                expenses.map((expense) => {
+                  const createdBy = expense.created_by_name || expense.createdByName || "—";
                   return (
-                    <tr key={sale.id} className="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
-                      <td className="p-md font-headline-md text-label-md font-bold truncate">{materialName}</td>
-                      <td className="p-md text-right font-mono text-on-surface-variant">{sale.qty_used ?? "—"}</td>
-                      <td className="p-md text-right font-mono text-primary font-bold">{formatAmount(sale.total_amount)}</td>
-                      <td className="p-md text-center">
-                        <SaleStatusBadge status={sale.status} />
-                      </td>
-                      <td className="p-md truncate max-w-[200px] text-on-surface-variant" title={sale.remarks || ""}>
-                        {sale.remarks || "-"}
+                    <tr key={expense.id} className="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+                      <td className="p-md font-headline-md text-label-md font-bold truncate">{expense.title || "Untitled expense"}</td>
+                      <td className="p-md text-on-surface-variant">{categoryLabel(expense.category)}</td>
+                      <td className="p-md text-right font-mono text-primary font-bold">{formatAmount(expense.amount)}</td>
+                      <td className="p-md truncate max-w-[200px] text-on-surface-variant" title={expense.remarks || ""}>
+                        {expense.remarks || "-"}
                       </td>
                       <td className="p-md text-on-surface-variant">{createdBy}</td>
-                      <td className="p-md font-mono text-on-surface-variant">{formatDate(sale.created_at || sale.createdAt)}</td>
+                      <td className="p-md font-mono text-on-surface-variant">{formatDate(expense.created_at || expense.createdAt)}</td>
                       <td className="p-md text-right">
                         <div className="flex items-center justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                          {!isPaid && (
-                            <button
-                              onClick={() => setModal({ type: "paid", sale })}
-                              disabled={!can("update_sales")}
-                              className="w-7 h-7 flex items-center justify-center border border-outline-variant hover:border-primary hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-outline-variant disabled:hover:bg-transparent disabled:hover:text-inherit"
-                              title={can("update_sales") ? "Mark Paid" : "You don't have permission to update sales"}
-                            >
-                              <span className="material-symbols-outlined text-[16px]">check</span>
-                            </button>
-                          )}
                           <button
-                            onClick={() => setModal({ type: "delete", sale })}
-                            disabled={!can("delete_sales")}
+                            onClick={() => setModal({ type: "edit", expense })}
+                            disabled={!can("update_expense")}
+                            className="w-7 h-7 flex items-center justify-center border border-outline-variant hover:border-primary hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-outline-variant disabled:hover:text-inherit"
+                            title={can("update_expense") ? "Edit" : "You don't have permission to edit expenses"}
+                          >
+                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                          </button>
+                          <button
+                            onClick={() => setModal({ type: "delete", expense })}
+                            disabled={!can("delete_expense")}
                             className="w-7 h-7 flex items-center justify-center border border-outline-variant hover:border-error hover:text-error transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-outline-variant disabled:hover:text-inherit"
-                            title={can("delete_sales") ? "Delete" : "You don't have permission to delete sales"}
+                            title={can("delete_expense") ? "Delete" : "You don't have permission to delete expenses"}
                           >
                             <span className="material-symbols-outlined text-[16px]">delete</span>
                           </button>
@@ -282,7 +250,7 @@ function SalesHistory() {
         <div className="mt-auto border-t border-primary p-md flex items-center justify-between bg-surface-container-lowest">
           <div className="font-label-md text-label-md text-on-surface-variant uppercase">
             Page {page} of {Math.max(totalPages, 1)}
-            <span className="ml-sm normal-case tracking-normal text-[11px]">({SALES_PAGE_SIZE} / page)</span>
+            <span className="ml-sm normal-case tracking-normal text-[11px]">({EXPENSES_PAGE_SIZE} / page)</span>
           </div>
           <div className="flex gap-xs">
             <button
@@ -306,19 +274,19 @@ function SalesHistory() {
 
       {/* Modals */}
       {modal === "record" && (
-        <RecordSaleModal businessId={businessId} onClose={() => setModal(null)} onSaved={handleMutated} onUnauthorized={goToLogin} />
+        <RecordExpenseModal businessId={businessId} onClose={() => setModal(null)} onSaved={handleMutated} onUnauthorized={goToLogin} />
       )}
       {modal === "filters" && (
-        <SalesFiltersModal businessId={businessId} initial={filters} onClose={() => setModal(null)} onApply={applyFilters} />
+        <ExpensesFiltersModal initial={filters} onClose={() => setModal(null)} onApply={applyFilters} />
+      )}
+      {modal?.type === "edit" && (
+        <EditExpenseModal expense={modal.expense} onClose={() => setModal(null)} onSaved={handleMutated} onUnauthorized={goToLogin} />
       )}
       {modal?.type === "delete" && (
-        <DeleteSaleDialog sale={modal.sale} onClose={() => setModal(null)} onDeleted={handleMutated} onUnauthorized={goToLogin} />
-      )}
-      {modal?.type === "paid" && (
-        <MarkPaidDialog sale={modal.sale} onClose={() => setModal(null)} onUpdated={handleMutated} onUnauthorized={goToLogin} />
+        <DeleteExpenseDialog expense={modal.expense} onClose={() => setModal(null)} onDeleted={handleMutated} onUnauthorized={goToLogin} />
       )}
     </div>
   );
 }
 
-export default SalesHistory;
+export default Expenses;

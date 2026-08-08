@@ -1,27 +1,21 @@
 import React, { useState } from "react";
-import { useMaterials } from "../../hooks/useMaterials";
-import { STOCK_STATUS_OPTIONS } from "../../constants/stockOptions";
+import { EXPENSE_CATEGORY_OPTIONS } from "../../constants/expenseOptions";
 import DateRangePresets from "../DateRangePresets";
 
-// Modal for filtering stock history by date range, status, and material.
-// The material filter is a plain dropdown (no search typeahead), populated from
-// the business's materials list. `initial` seeds the current values.
-function StocksFiltersModal({ businessId, initial, onClose, onApply }) {
-  const { materials, loading: materialsLoading } = useMaterials(businessId);
-
-  const [status, setStatus] = useState(initial?.status || "");
+// Modal for filtering expenses by date range and category.
+// `initial` seeds the current filter values; `onApply` receives the new filters.
+function ExpensesFiltersModal({ initial, onClose, onApply }) {
+  const [category, setCategory] = useState(initial?.category || "");
   const [dateFrom, setDateFrom] = useState(initial?.dateFrom || "");
   const [dateTo, setDateTo] = useState(initial?.dateTo || "");
-  const [materialId, setMaterialId] = useState(initial?.materialId || "");
 
   const handleApply = (e) => {
     e.preventDefault();
-    const material = materials.find((m) => m.id === materialId) || null;
-    onApply({ status, dateFrom, dateTo, materialId, material });
+    onApply({ category, dateFrom, dateTo });
   };
 
   const handleClear = () => {
-    onApply({ status: "", dateFrom: "", dateTo: "", materialId: "", material: null });
+    onApply({ category: "", dateFrom: "", dateTo: "" });
   };
 
   const fieldClass =
@@ -36,8 +30,8 @@ function StocksFiltersModal({ businessId, initial, onClose, onApply }) {
       >
         <div className="flex items-start justify-between">
           <div className="flex flex-col gap-xs">
-            <h2 className="font-headline-lg text-headline-md text-on-surface uppercase tracking-tight">Filter Stocks</h2>
-            <p className="font-body-sm text-body-sm text-on-surface-variant">Narrow the stock history by date, status, or material.</p>
+            <h2 className="font-headline-lg text-headline-md text-on-surface uppercase tracking-tight">Filter Expenses</h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">Narrow the ledger by date, status, or category.</p>
           </div>
           <button
             onClick={onClose}
@@ -75,34 +69,14 @@ function StocksFiltersModal({ businessId, initial, onClose, onApply }) {
           </div>
 
           <div className="flex flex-col gap-xs">
-            <label className={labelClass} htmlFor="status">
-              Status
+            <label className={labelClass} htmlFor="category">
+              Category
             </label>
-            <select className={fieldClass} id="status" value={status} onChange={(e) => setStatus(e.target.value)}>
-              <option value="">All statuses</option>
-              {STOCK_STATUS_OPTIONS.map((opt) => (
+            <select className={fieldClass} id="category" value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="">All categories</option>
+              {EXPENSE_CATEGORY_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-xs">
-            <label className={labelClass} htmlFor="materialId">
-              Material
-            </label>
-            <select
-              className={fieldClass}
-              id="materialId"
-              value={materialId}
-              onChange={(e) => setMaterialId(e.target.value)}
-              disabled={materialsLoading}
-            >
-              <option value="">{materialsLoading ? "Loading materials..." : "All materials"}</option>
-              {materials.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name || "Untitled material"}
                 </option>
               ))}
             </select>
@@ -139,4 +113,4 @@ function StocksFiltersModal({ businessId, initial, onClose, onApply }) {
   );
 }
 
-export default StocksFiltersModal;
+export default ExpensesFiltersModal;

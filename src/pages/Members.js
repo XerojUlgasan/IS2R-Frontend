@@ -233,7 +233,7 @@ function Members() {
         {!loading && error && error.status !== 401 && error.status !== 403 && (
           <div className="flex flex-col items-center justify-center gap-md py-xl text-center">
             <span className="material-symbols-outlined text-[32px] text-error">error</span>
-            <p className="font-body-md text-on-surface">Something went wrong, try again.</p>
+            <p className="font-body-md text-on-surface">{error.message || "Something went wrong, try again."}</p>
             <button
               onClick={refetch}
               className="px-lg py-md bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest border border-primary hover:bg-surface hover:text-primary transition-colors flex items-center gap-sm"

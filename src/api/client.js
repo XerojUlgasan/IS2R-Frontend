@@ -18,10 +18,13 @@ async function getAuthHeaders() {
 // Performs an authenticated JSON request and normalizes errors to
 // { status, message } so the UI can rely on a single shape.
 export async function apiRequest(path, options = {}) {
+  // For FormData bodies (e.g. file uploads) let the browser set the
+  // multipart Content-Type (with boundary); only default to JSON otherwise.
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(await getAuthHeaders()),
       ...options.headers,
     },

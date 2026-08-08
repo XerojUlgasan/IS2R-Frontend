@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { SALE_STATUS_OPTIONS } from "../../constants/saleOptions";
 import MaterialSearchSelect from "../materials/MaterialSearchSelect";
+import DateRangePresets from "../DateRangePresets";
 
 // Modal for filtering the sales ledger by date range, status, and material.
 // `initial` seeds the current filter values; `onApply` receives the new filters.
@@ -51,6 +52,15 @@ function SalesFiltersModal({ businessId, initial, onClose, onApply }) {
         </div>
 
         <form className="flex flex-col gap-md" onSubmit={handleApply}>
+          <DateRangePresets
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onSelect={(from, to) => {
+              setDateFrom(from);
+              setDateTo(to);
+            }}
+          />
+
           <div className="grid grid-cols-2 gap-md">
             <div className="flex flex-col gap-xs">
               <label className={labelClass} htmlFor="dateFrom">

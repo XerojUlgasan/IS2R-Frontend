@@ -29,5 +29,10 @@ export function useBusinesses() {
     setBusinesses((prev) => [business, ...prev]);
   }, []);
 
-  return { businesses, loading, error, refetch: load, addBusiness };
+  // Removes a business from local state (e.g. after declining an invite).
+  const removeBusiness = useCallback((businessId) => {
+    setBusinesses((prev) => prev.filter((b) => b.id !== businessId));
+  }, []);
+
+  return { businesses, loading, error, refetch: load, addBusiness, removeBusiness };
 }

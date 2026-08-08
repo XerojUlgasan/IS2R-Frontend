@@ -19,6 +19,7 @@ const NAV_GROUPS = [
     label: "Finance",
     items: [
       { to: "/sales-history", icon: "history", text: "Sales History" },
+      { to: "/expenses", icon: "payments", text: "Expenses" },
     ],
   },
   {

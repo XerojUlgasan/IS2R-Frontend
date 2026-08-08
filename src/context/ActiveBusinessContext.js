@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 
-// Holds the currently selected business (id, name, logo, role) app-wide and
-// persists it so a page refresh keeps the chosen workspace.
+// Holds the currently selected business (id, name, logo, role, actions)
+// app-wide and persists it so a page refresh keeps the chosen workspace.
+// `actions` is the list of granted member_actions (e.g. add_material,
+// create_sales) used to gate permission-scoped UI.
 const ActiveBusinessContext = createContext(null);
 const STORAGE_KEY = "active_business";
 

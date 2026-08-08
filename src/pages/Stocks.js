@@ -2,10 +2,12 @@ import React, { useState, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useActiveBusiness } from "../context/ActiveBusinessContext";
 import { useStocks, STOCKS_PAGE_SIZE } from "../hooks/useStocks";
+import { usePermissions } from "../hooks/usePermissions";
 import { STOCK_STATUS_OPTIONS } from "../constants/stockOptions";
 import { clearMaterialSearchCache } from "../hooks/useMaterialSearch";
 import StocksFiltersModal from "../components/stocks/StocksFiltersModal";
 import AddStockEntryModal from "../components/stocks/AddStockEntryModal";
+import StockHistoryModal from "../components/stocks/StockHistoryModal";
 
 const EMPTY_FILTERS = { status: "", materialId: "", dateFrom: "", dateTo: "", material: null };
 
@@ -66,8 +68,10 @@ function Stocks() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
   const [showAddStock, setShowAddStock] = useState(false);
+  const [historyStock, setHistoryStock] = useState(null);
 
   const { stocks, total, totalPages, loading, error, refetch } = useStocks(businessId, page, filters);
+  const { can } = usePermissions();
 
   const goToLogin = useCallback(() => navigate("/login"), [navigate]);
 
@@ -148,7 +152,9 @@ function Stocks() {
           </button>
           <button
             onClick={() => setShowAddStock(true)}
-            className="h-10 px-md flex items-center justify-center gap-sm bg-primary text-on-primary hover:bg-primary/90 transition-colors font-label-md text-label-md uppercase tracking-widest whitespace-nowrap border-none"
+            disabled={!can("add_stocks")}
+            title={can("add_stocks") ? "Add Stock" : "You don't have permission to add stock"}
+            className="h-10 px-md flex items-center justify-center gap-sm bg-primary text-on-primary hover:bg-primary/90 transition-colors font-label-md text-label-md uppercase tracking-widest whitespace-nowrap border-none disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
             Add Stock
@@ -202,12 +208,13 @@ function Stocks() {
               <th className="py-md px-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-right">Mfg Price (₱)</th>
               <th className="py-md px-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Status</th>
               <th className="py-md px-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Date Stocked</th>
+              <th className="py-md px-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-outline">
             {loading && (
               <tr>
-                <td colSpan={7} className="p-xl text-center text-on-surface-variant">
+                <td colSpan={8} className="p-xl text-center text-on-surface-variant">
                   <span className="material-symbols-outlined animate-spin align-middle mr-sm">refresh</span>
                   Loading stock history...
                 </td>
@@ -216,10 +223,10 @@ function Stocks() {
 
             {!loading && error && error.status !== 401 && (
               <tr>
-                <td colSpan={7} className="p-xl text-center">
+                <td colSpan={8} className="p-xl text-center">
                   <div className="flex flex-col items-center gap-md">
                     <span className="material-symbols-outlined text-[32px] text-error">error</span>
-                    <p className="font-body-md text-on-surface">Something went wrong, try again.</p>
+                    <p className="font-body-md text-on-surface">{error.message || "Something went wrong, try again."}</p>
                     <button
                       onClick={refetch}
                       className="px-lg py-md bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest border border-primary hover:bg-surface hover:text-primary transition-colors flex items-center gap-sm"
@@ -234,7 +241,7 @@ function Stocks() {
 
             {!loading && !error && stocks.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-xl text-center text-on-surface-variant">
+                <td colSpan={8} className="p-xl text-center text-on-surface-variant">
                   {hasActiveFilters ? "No stock entries match the current filters." : "No stock recorded yet."}
                 </td>
               </tr>
@@ -278,6 +285,16 @@ function Stocks() {
                     <td className={`py-md px-md font-body-sm text-body-sm text-on-surface-variant ${consumed ? "opacity-50" : ""}`}>
                       {formatDate(stock.created_at || stock.createdAt)}
                     </td>
+                    <td className="py-md px-md text-right">
+                      <button
+                        onClick={() => setHistoryStock(stock)}
+                        className="inline-flex items-center gap-xs px-md py-sm border border-outline text-on-surface hover:border-primary hover:text-primary transition-colors font-label-md text-label-md uppercase tracking-widest"
+                        title="View consumption history"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">history</span>
+                        History
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -320,6 +337,9 @@ function Stocks() {
           onSaved={handleStockAdded}
           onUnauthorized={goToLogin}
         />
+      )}
+      {historyStock && (
+        <StockHistoryModal businessId={businessId} stock={historyStock} onClose={() => setHistoryStock(null)} />
       )}
     </div>
   );

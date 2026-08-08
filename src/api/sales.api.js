@@ -38,3 +38,13 @@ export function deleteSale(saleId) {
     method: "DELETE",
   });
 }
+
+// Fetches the aggregated sales report (analytics) for a business, scoped to a
+// period. period = "daily" | "weekly" | "monthly" | "yearly".
+// Returns the full report payload (see docs/SALES_REPORTS_API.md).
+export function getSalesReport(businessId, period = "daily") {
+  const qs = new URLSearchParams();
+  if (period) qs.set("period", period);
+  const query = qs.toString();
+  return apiRequest(`/api/businesses/${businessId}/sales-report${query ? `?${query}` : ""}`);
+}

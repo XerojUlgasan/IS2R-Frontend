@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useActiveBusiness } from "../context/ActiveBusinessContext";
 import { useMaterials } from "../hooks/useMaterials";
+import { usePermissions } from "../hooks/usePermissions";
 import { clearMaterialSearchCache } from "../hooks/useMaterialSearch";
 import MaterialFormModal from "../components/materials/MaterialFormModal";
 import AddStockModal from "../components/materials/AddStockModal";
@@ -56,6 +57,7 @@ function Materials() {
   const { activeBusiness } = useActiveBusiness();
   const businessId = activeBusiness?.id;
   const { materials, loading, error, refetch } = useMaterials(businessId);
+  const { can } = usePermissions();
 
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState("ALL"); // ALL | AVAILABLE | CONSUMED
@@ -149,7 +151,9 @@ function Materials() {
           <div className="flex items-center gap-sm shrink-0">
             <button
               onClick={() => setModal({ type: "create" })}
-              className="h-10 px-md flex items-center justify-center gap-sm bg-primary text-on-primary hover:bg-primary/90 transition-colors font-label-md text-label-md uppercase tracking-widest whitespace-nowrap border-none"
+              disabled={!can("add_material")}
+              title={can("add_material") ? "Add Material" : "You don't have permission to add materials"}
+              className="h-10 px-md flex items-center justify-center gap-sm bg-primary text-on-primary hover:bg-primary/90 transition-colors font-label-md text-label-md uppercase tracking-widest whitespace-nowrap border-none disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary"
             >
               <span className="material-symbols-outlined text-[18px]">add</span>
               Add Material
@@ -182,7 +186,7 @@ function Materials() {
       {!loading && error && error.status !== 401 && (
         <div className="flex flex-col items-center justify-center gap-md py-xl border border-outline bg-surface-container-lowest text-center">
           <span className="material-symbols-outlined text-[32px] text-error">error</span>
-          <p className="font-body-md text-body-md text-on-surface">Something went wrong, try again.</p>
+          <p className="font-body-md text-body-md text-on-surface">{error.message || "Something went wrong, try again."}</p>
           <button
             onClick={refetch}
             className="px-lg py-md bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest border border-primary hover:bg-surface hover:text-primary transition-colors flex items-center gap-sm"
@@ -209,7 +213,9 @@ function Materials() {
           {withStatus.length === 0 && (
             <button
               onClick={() => setModal({ type: "create" })}
-              className="h-12 px-lg flex items-center justify-center gap-sm bg-primary text-on-primary hover:bg-primary/90 transition-colors font-label-md text-label-md uppercase tracking-widest border-none"
+              disabled={!can("add_material")}
+              title={can("add_material") ? "Add Material" : "You don't have permission to add materials"}
+              className="h-12 px-lg flex items-center justify-center gap-sm bg-primary text-on-primary hover:bg-primary/90 transition-colors font-label-md text-label-md uppercase tracking-widest border-none disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary"
             >
               <span className="material-symbols-outlined text-[20px]">add</span>
               Add Your First Material
@@ -268,22 +274,25 @@ function Materials() {
                       <div className="flex items-center justify-end gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => setModal({ type: "stock", material: m })}
-                          className="p-xs hover:bg-surface-container-highest transition-colors text-on-surface-variant"
-                          title="Add Stock"
+                          disabled={!can("add_stocks")}
+                          className="p-xs hover:bg-surface-container-highest transition-colors text-on-surface-variant disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                          title={can("add_stocks") ? "Add Stock" : "You don't have permission to add stock"}
                         >
                           <span className="material-symbols-outlined text-[18px]">add_box</span>
                         </button>
                         <button
                           onClick={() => setModal({ type: "edit", material: m })}
-                          className="p-xs hover:bg-surface-container-highest transition-colors text-on-surface-variant"
-                          title="Edit"
+                          disabled={!can("update_material")}
+                          className="p-xs hover:bg-surface-container-highest transition-colors text-on-surface-variant disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                          title={can("update_material") ? "Edit" : "You don't have permission to edit materials"}
                         >
                           <span className="material-symbols-outlined text-[18px]">edit</span>
                         </button>
                         <button
                           onClick={() => setModal({ type: "delete", material: m })}
-                          className="p-xs hover:bg-error-container hover:text-error transition-colors text-on-surface-variant"
-                          title="Delete"
+                          disabled={!can("delete_material")}
+                          className="p-xs hover:bg-error-container hover:text-error transition-colors text-on-surface-variant disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
+                          title={can("delete_material") ? "Delete" : "You don't have permission to delete materials"}
                         >
                           <span className="material-symbols-outlined text-[18px]">delete</span>
                         </button>
