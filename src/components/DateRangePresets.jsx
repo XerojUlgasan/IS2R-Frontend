@@ -3,7 +3,7 @@ import React from "react";
 // Quick date-range presets shared across the filter modals. Each button sets
 // dateFrom = today - (days - 1) and dateTo = today (inclusive) as YYYY-MM-DD.
 // 7D and 1W intentionally map to the same 7-day window.
-const PRESETS = [
+const DEFAULT_PRESETS = [
   { label: "1D", days: 1 },
   { label: "3D", days: 3 },
   { label: "7D", days: 7 },
@@ -25,7 +25,7 @@ function rangeForDays(days) {
   return { from: toISODate(from), to: toISODate(to) };
 }
 
-function DateRangePresets({ dateFrom, dateTo, onSelect, label = "Quick Range" }) {
+function DateRangePresets({ dateFrom, dateTo, onSelect, label = "Quick Range", presets = DEFAULT_PRESETS }) {
   const labelClass = "font-label-md text-label-md uppercase tracking-widest text-on-surface-variant";
 
   const isActive = (days) => {
@@ -35,9 +35,9 @@ function DateRangePresets({ dateFrom, dateTo, onSelect, label = "Quick Range" })
 
   return (
     <div className="flex flex-col gap-xs">
-      <span className={labelClass}>{label}</span>
+      {label && <span className={labelClass}>{label}</span>}
       <div className="flex flex-wrap gap-xs">
-        {PRESETS.map((preset) => {
+        {presets.map((preset) => {
           const active = isActive(preset.days);
           return (
             <button

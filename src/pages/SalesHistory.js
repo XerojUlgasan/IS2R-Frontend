@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useActiveBusiness } from "../context/ActiveBusinessContext";
 import { useSales, SALES_PAGE_SIZE } from "../hooks/useSales";
 import { usePermissions } from "../hooks/usePermissions";
@@ -51,8 +51,15 @@ function SalesHistory() {
   const { activeBusiness } = useActiveBusiness();
   const businessId = activeBusiness?.id;
 
+  const [searchParams] = useSearchParams();
+
   const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  // Seed the status filter from a deep link (e.g. Dashboard "Pending Payments"
+  // → /sales-history?status=PENDING).
+  const [filters, setFilters] = useState(() => {
+    const status = String(searchParams.get("status") || "").toUpperCase();
+    return { ...EMPTY_FILTERS, status: status === "PENDING" || status === "PAID" ? status : "" };
+  });
   const [modal, setModal] = useState(null); // "record" | "filters" | { type: "delete", sale }
 
   const { sales, total, totalPages, loading, error, refetch } = useSales(businessId, page, filters);
