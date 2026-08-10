@@ -58,7 +58,8 @@ function Dashboard() {
   const businessId = activeBusiness?.id;
 
   const [revenuePeriod, setRevenuePeriod] = useState("monthly"); // "weekly" | "monthly"
-  const { summary, loading, error, refetch } = useDashboard(businessId, revenuePeriod);
+  // Single fetch now returns both periods; toggling is purely client-side.
+  const { summary, loading, error, refetch } = useDashboard(businessId);
 
   const goToLogin = useCallback(() => navigate("/login"), [navigate]);
 
@@ -76,12 +77,16 @@ function Dashboard() {
   const hasTodayTrend = !Number.isNaN(todayTrend);
   const todayUp = todayTrend >= 0;
 
-  // Period revenue card (weekly/monthly). Falls back to legacy monthly fields.
+  // Period revenue card (weekly/monthly). The payload now carries both periods
+  // under `s.periods`, so the toggle just picks the right slice. Falls back to
+  // the legacy single-period / monthly fields for backward compatibility.
   const periodLabel = revenuePeriod === "weekly" ? "Weekly" : "Monthly";
   const periodWord = revenuePeriod === "weekly" ? "week" : "month";
-  const periodRevenue = s.periodRevenue ?? s.monthlyRevenue;
-  const periodExpenses = s.periodExpenses ?? s.monthlyExpenses;
-  const periodNet = s.periodNet ?? (Number(periodRevenue) || 0) - (Number(periodExpenses) || 0);
+  const periods = s.periods || {};
+  const activePeriod = periods[revenuePeriod] || {};
+  const periodRevenue = activePeriod.revenue ?? s.periodRevenue ?? s.monthlyRevenue;
+  const periodExpenses = activePeriod.expenses ?? s.periodExpenses ?? s.monthlyExpenses;
+  const periodNet = activePeriod.net ?? s.periodNet ?? (Number(periodRevenue) || 0) - (Number(periodExpenses) || 0);
   const netNegative = Number(periodNet) < 0;
 
   // No workspace chosen yet.
