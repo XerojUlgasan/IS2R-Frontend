@@ -160,38 +160,53 @@ function Dashboard() {
         </div>
 
         {/* Period Revenue (Weekly / Monthly toggle) */}
-        <div className="col-span-1 md:col-span-4 bg-primary text-on-primary border border-primary p-lg flex flex-col justify-between min-h-[300px]">
-          <div className="flex justify-between items-start gap-sm">
-            <span className="font-headline-md text-headline-md tracking-tight uppercase">{periodLabel} Revenue</span>
-            {/* Weekly / Monthly toggle */}
-            <div className="flex border border-on-primary/40 shrink-0">
-              <button
-                type="button"
-                onClick={() => setRevenuePeriod("weekly")}
-                className={`px-sm py-xs font-label-md text-[10px] uppercase tracking-widest transition-colors ${
-                  revenuePeriod === "weekly" ? "bg-on-primary text-primary" : "text-on-primary hover:bg-on-primary/10"
-                }`}
-              >
-                Weekly
-              </button>
-              <button
-                type="button"
-                onClick={() => setRevenuePeriod("monthly")}
-                className={`px-sm py-xs font-label-md text-[10px] uppercase tracking-widest transition-colors ${
-                  revenuePeriod === "monthly" ? "bg-on-primary text-primary" : "text-on-primary hover:bg-on-primary/10"
-                }`}
-              >
-                Monthly
-              </button>
+        <div className="col-span-1 md:col-span-4 flex flex-col gap-md">
+          {/* Sales Calendar shortcut */}
+          <button
+            onClick={() => navigate("/sales-calendar")}
+            className="flex items-center justify-between gap-md bg-surface-container-lowest border border-outline-variant p-md group hover:border-primary transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-sm">
+              <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
+              <span className="font-label-md text-label-md uppercase tracking-widest text-on-surface group-hover:text-primary">Sales Calendar</span>
             </div>
-          </div>
-          <div className="flex flex-col gap-xs mt-auto">
-            <span className="font-headline-lg text-headline-lg font-bold tabular-nums">{loading ? "…" : peso(periodRevenue)}</span>
-            <div className="w-full h-px bg-on-primary/20 my-sm"></div>
-            <span className="font-label-md text-label-md text-on-primary/70 uppercase tracking-widest">Net after expenses (this {periodWord})</span>
-            <span className={`font-headline-md text-headline-md font-bold tabular-nums ${netNegative ? "text-error" : "text-on-primary"}`}>
-              {loading ? "…" : peso(periodNet)}
-            </span>
+            <span className="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:translate-x-1 group-hover:text-primary transition-transform">arrow_forward</span>
+          </button>
+
+          {/* Period Revenue card */}
+          <div className="flex-1 bg-primary text-on-primary border border-primary p-lg flex flex-col justify-between min-h-[260px]">
+            <div className="flex justify-between items-start gap-sm">
+              <span className="font-headline-md text-headline-md tracking-tight uppercase">{periodLabel} Revenue</span>
+              {/* Weekly / Monthly toggle */}
+              <div className="flex border border-on-primary/40 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setRevenuePeriod("weekly")}
+                  className={`px-sm py-xs font-label-md text-[10px] uppercase tracking-widest transition-colors ${
+                    revenuePeriod === "weekly" ? "bg-on-primary text-primary" : "text-on-primary hover:bg-on-primary/10"
+                  }`}
+                >
+                  Weekly
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRevenuePeriod("monthly")}
+                  className={`px-sm py-xs font-label-md text-[10px] uppercase tracking-widest transition-colors ${
+                    revenuePeriod === "monthly" ? "bg-on-primary text-primary" : "text-on-primary hover:bg-on-primary/10"
+                  }`}
+                >
+                  Monthly
+                </button>
+              </div>
+            </div>
+            <div className="flex flex-col gap-xs mt-auto">
+              <span className="font-headline-lg text-headline-lg font-bold tabular-nums">{loading ? "…" : peso(periodRevenue)}</span>
+              <div className="w-full h-px bg-on-primary/20 my-sm"></div>
+              <span className="font-label-md text-label-md text-on-primary/70 uppercase tracking-widest">Net after expenses (this {periodWord})</span>
+              <span className={`font-headline-md text-headline-md font-bold tabular-nums ${netNegative ? "text-error" : "text-on-primary"}`}>
+                {loading ? "…" : peso(periodNet)}
+              </span>
+            </div>
           </div>
         </div>
 

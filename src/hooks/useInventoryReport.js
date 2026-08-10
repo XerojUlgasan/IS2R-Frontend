@@ -15,9 +15,15 @@ export function useInventoryReport(businessId, period) {
     }
     setLoading(true);
     setError(null);
+    const apply = (data) => setReport(data?.report || data || null);
     try {
-      const data = await getInventoryReport(businessId, period);
-      setReport(data.report || data || null);
+      const data = await getInventoryReport(businessId, period, {
+        onCachedData: (cached) => {
+          apply(cached);
+          setLoading(false);
+        },
+      });
+      apply(data);
     } catch (err) {
       setError(err);
     } finally {

@@ -10,9 +10,16 @@ export function useBusinesses() {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
+    const apply = (data) => setBusinesses(data?.businesses || []);
     try {
-      const data = await getBusinesses();
-      setBusinesses(data.businesses || []);
+      const data = await getBusinesses({
+        // Paint from the localStorage cache instantly, then revalidate.
+        onCachedData: (cached) => {
+          apply(cached);
+          setLoading(false);
+        },
+      });
+      apply(data);
     } catch (err) {
       setError(err);
     } finally {

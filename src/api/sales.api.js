@@ -4,7 +4,7 @@ import { apiRequest } from "./client";
 
 // Lists sales for a business with pagination + optional filters.
 // params = { page, limit, status, materialId, dateFrom, dateTo }
-export function getSales(businessId, params = {}) {
+export function getSales(businessId, params = {}, opts = {}) {
   const qs = new URLSearchParams();
   if (params.page) qs.set("page", params.page);
   if (params.limit) qs.set("limit", params.limit);
@@ -13,7 +13,7 @@ export function getSales(businessId, params = {}) {
   if (params.dateFrom) qs.set("dateFrom", params.dateFrom);
   if (params.dateTo) qs.set("dateTo", params.dateTo);
   const query = qs.toString();
-  return apiRequest(`/api/businesses/${businessId}/sales${query ? `?${query}` : ""}`);
+  return apiRequest(`/api/businesses/${businessId}/sales${query ? `?${query}` : ""}`, opts);
 }
 
 // Records a new sale. payload = { materialId, qty_used, total_amount, status, remarks }.
@@ -42,9 +42,9 @@ export function deleteSale(saleId) {
 // Fetches the aggregated sales report (analytics) for a business, scoped to a
 // period. period = "daily" | "weekly" | "monthly" | "yearly".
 // Returns the full report payload (see docs/SALES_REPORTS_API.md).
-export function getSalesReport(businessId, period = "daily") {
+export function getSalesReport(businessId, period = "daily", opts = {}) {
   const qs = new URLSearchParams();
   if (period) qs.set("period", period);
   const query = qs.toString();
-  return apiRequest(`/api/businesses/${businessId}/sales-report${query ? `?${query}` : ""}`);
+  return apiRequest(`/api/businesses/${businessId}/sales-report${query ? `?${query}` : ""}`, opts);
 }

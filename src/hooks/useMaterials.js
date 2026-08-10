@@ -14,9 +14,15 @@ export function useMaterials(businessId) {
     }
     setLoading(true);
     setError(null);
+    const apply = (data) => setMaterials(data?.materials || []);
     try {
-      const data = await getMaterials(businessId);
-      setMaterials(data.materials || []);
+      const data = await getMaterials(businessId, {
+        onCachedData: (cached) => {
+          apply(cached);
+          setLoading(false);
+        },
+      });
+      apply(data);
     } catch (err) {
       setError(err);
     } finally {

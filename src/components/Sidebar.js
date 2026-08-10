@@ -25,6 +25,7 @@ const NAV_GROUPS = [
   {
     label: "Insights",
     items: [
+      { to: "/sales-calendar", icon: "calendar_month", text: "Sales Calendar" },
       { to: "/sales-reports", icon: "bar_chart", text: "Sales Reports" },
       { to: "/inventory-reports", icon: "monitoring", text: "Inventory Reports" },
     ],

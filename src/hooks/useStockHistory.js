@@ -23,13 +23,32 @@ export function useStockHistory(businessId, stockId) {
       loadingRef.current = true;
       setLoading(true);
       setError(null);
-      try {
-        const data = await getStockHistory(businessId, stockId, { page: nextPage, limit: STOCK_HISTORY_PAGE_SIZE });
-        const rows = data.history || [];
-        setItems((prev) => (nextPage === 1 ? rows : [...prev, ...rows]));
-        setTotal(data.total ?? rows.length);
-        setTotalPages(data.totalPages ?? 1);
+      const apply = (data, append) => {
+        const rows = data?.history || [];
+        setItems((prev) => (append ? [...prev, ...rows] : rows));
+        setTotal(data?.total ?? rows.length);
+        setTotalPages(data?.totalPages ?? 1);
         setPage(nextPage);
+      };
+      try {
+        // Only the first page paints from cache (replacing items). Later pages
+        // skip cache paint so we don't append cached + fresh rows twice.
+        const opts =
+          nextPage === 1
+            ? {
+                onCachedData: (cached) => {
+                  apply(cached, false);
+                  setLoading(false);
+                },
+              }
+            : {};
+        const data = await getStockHistory(
+          businessId,
+          stockId,
+          { page: nextPage, limit: STOCK_HISTORY_PAGE_SIZE },
+          opts
+        );
+        apply(data, nextPage !== 1);
       } catch (err) {
         setError(err);
       } finally {

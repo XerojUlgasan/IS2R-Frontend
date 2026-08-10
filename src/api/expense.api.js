@@ -4,7 +4,7 @@ import { apiRequest } from "./client";
 
 // Lists expenses for a business with pagination + optional filters.
 // params = { page, limit, category, dateFrom, dateTo }
-export function getExpenses(businessId, params = {}) {
+export function getExpenses(businessId, params = {}, opts = {}) {
   const qs = new URLSearchParams();
   if (params.page) qs.set("page", params.page);
   if (params.limit) qs.set("limit", params.limit);
@@ -12,7 +12,7 @@ export function getExpenses(businessId, params = {}) {
   if (params.dateFrom) qs.set("dateFrom", params.dateFrom);
   if (params.dateTo) qs.set("dateTo", params.dateTo);
   const query = qs.toString();
-  return apiRequest(`/api/businesses/${businessId}/expenses${query ? `?${query}` : ""}`);
+  return apiRequest(`/api/businesses/${businessId}/expenses${query ? `?${query}` : ""}`, opts);
 }
 
 // Records a new expense. payload = { title, category, amount, remarks }.

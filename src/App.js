@@ -20,6 +20,7 @@ import Members from "./pages/Members";
 import AuditLogs from "./pages/AuditLogs";
 import BusinessSettings from "./pages/BusinessSettings";
 import ComingSoon from "./pages/ComingSoon";
+import Calendar from "./pages/Calendar";
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
         {/* Authenticated app shell (sidebar + header) */}
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/sales-calendar" element={<Calendar />} />
           <Route path="/inventory-materials" element={<Materials />} />
           <Route path="/inventory-stocks" element={<Stocks />} />
           <Route path="/sales-history" element={<SalesHistory />} />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { searchMaterials } from "../api/material.api";
+import { searchMaterials, getCachedMaterialSearch } from "../api/material.api";
 
 // Module-level cache of search results, keyed by `${businessId}::${query}`.
 // Shared across every MaterialSearchSelect so repeated queries hit no network.
@@ -39,10 +39,22 @@ export function useMaterialSearch(businessId, cooldownMs = 2000) {
       return;
     }
 
-    // Show the pending state immediately, but only hit the network after the
-    // cooldown window with no further keystrokes.
-    setLoading(true);
     setError(null);
+
+    // Instant paint from the persisted localStorage cache (survives reloads /
+    // new sessions). We still revalidate after the cooldown below.
+    const cached = getCachedMaterialSearch(businessId, q);
+    const hasCached = cached && Array.isArray(cached.materials);
+    if (hasCached) {
+      cache.set(key, cached.materials);
+      setResults(cached.materials);
+      setLoading(false);
+    } else {
+      // Nothing cached — show the pending state until the network resolves.
+      setLoading(true);
+    }
+
+    // Only hit the network after the cooldown window with no further keystrokes.
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(async () => {
@@ -52,8 +64,11 @@ export function useMaterialSearch(businessId, cooldownMs = 2000) {
         cache.set(key, list);
         setResults(list);
       } catch (err) {
-        setError(err);
-        setResults([]);
+        // Keep any cached results visible on a revalidation error.
+        if (!hasCached) {
+          setError(err);
+          setResults([]);
+        }
       } finally {
         setLoading(false);
       }

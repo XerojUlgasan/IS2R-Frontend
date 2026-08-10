@@ -22,18 +22,23 @@ export function useSales(businessId, page, filters) {
     }
     setLoading(true);
     setError(null);
+    const apply = (data) => {
+      setSales(data?.sales || []);
+      setTotal(data?.total ?? (data?.sales ? data.sales.length : 0));
+      setTotalPages(data?.totalPages ?? 1);
+    };
     try {
-      const data = await getSales(businessId, {
-        page,
-        limit: SALES_PAGE_SIZE,
-        status,
-        materialId,
-        dateFrom,
-        dateTo,
-      });
-      setSales(data.sales || []);
-      setTotal(data.total ?? (data.sales ? data.sales.length : 0));
-      setTotalPages(data.totalPages ?? 1);
+      const data = await getSales(
+        businessId,
+        { page, limit: SALES_PAGE_SIZE, status, materialId, dateFrom, dateTo },
+        {
+          onCachedData: (cached) => {
+            apply(cached);
+            setLoading(false);
+          },
+        }
+      );
+      apply(data);
     } catch (err) {
       setError(err);
     } finally {

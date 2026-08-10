@@ -22,18 +22,23 @@ export function useAuditLogs(businessId, page, filters) {
     }
     setLoading(true);
     setError(null);
+    const apply = (data) => {
+      setLogs(data?.logs || []);
+      setTotal(data?.total ?? (data?.logs ? data.logs.length : 0));
+      setTotalPages(data?.totalPages ?? 1);
+    };
     try {
-      const data = await getAuditLogs(businessId, {
-        page,
-        limit: AUDIT_PAGE_SIZE,
-        action,
-        dateFrom,
-        dateTo,
-        search,
-      });
-      setLogs(data.logs || []);
-      setTotal(data.total ?? (data.logs ? data.logs.length : 0));
-      setTotalPages(data.totalPages ?? 1);
+      const data = await getAuditLogs(
+        businessId,
+        { page, limit: AUDIT_PAGE_SIZE, action, dateFrom, dateTo, search },
+        {
+          onCachedData: (cached) => {
+            apply(cached);
+            setLoading(false);
+          },
+        }
+      );
+      apply(data);
     } catch (err) {
       setError(err);
     } finally {

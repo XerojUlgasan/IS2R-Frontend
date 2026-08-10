@@ -14,9 +14,15 @@ export function useBusinessSettings(businessId) {
     }
     setLoading(true);
     setError(null);
+    const apply = (data) => setSettings(data?.settings || data || null);
     try {
-      const data = await getBusinessSettings(businessId);
-      setSettings(data.settings || data || null);
+      const data = await getBusinessSettings(businessId, {
+        onCachedData: (cached) => {
+          apply(cached);
+          setLoading(false);
+        },
+      });
+      apply(data);
     } catch (err) {
       setError(err);
     } finally {

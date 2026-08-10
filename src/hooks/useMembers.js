@@ -14,9 +14,15 @@ export function useMembers(businessId) {
     }
     setLoading(true);
     setError(null);
+    const apply = (data) => setMembers(data?.members || []);
     try {
-      const data = await getMembers(businessId);
-      setMembers(data.members || []);
+      const data = await getMembers(businessId, {
+        onCachedData: (cached) => {
+          apply(cached);
+          setLoading(false);
+        },
+      });
+      apply(data);
     } catch (err) {
       setError(err);
     } finally {

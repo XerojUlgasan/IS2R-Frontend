@@ -1,9 +1,10 @@
 import { apiRequest } from "./client";
 import { supabase } from "../lib/supabaseClient";
 
-// Fetches the current user's businesses.
-export function getBusinesses() {
-  return apiRequest("/api/businesses");
+// Fetches the current user's businesses. `opts` is forwarded to apiRequest
+// (e.g. `onCachedData` for instant paint from the localStorage cache).
+export function getBusinesses(opts = {}) {
+  return apiRequest("/api/businesses", opts);
 }
 
 // Accepts a pending invitation to a business. No request body — the caller is
@@ -37,9 +38,9 @@ export function createBusiness(payload) {
 }
 
 // Fetches a business's settings (name, description, contact_number, address,
-// logo_img_loc). Returns { settings: {...} }.
-export function getBusinessSettings(businessId) {
-  return apiRequest(`/api/businesses/${businessId}/settings`);
+// logo_img_loc). Returns { settings: {...} }. `opts` is forwarded to apiRequest.
+export function getBusinessSettings(businessId, opts = {}) {
+  return apiRequest(`/api/businesses/${businessId}/settings`, opts);
 }
 
 // Updates a business's settings. payload = { name?, description?, contact_number?,

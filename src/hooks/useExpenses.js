@@ -22,17 +22,23 @@ export function useExpenses(businessId, page, filters) {
     }
     setLoading(true);
     setError(null);
+    const apply = (data) => {
+      setExpenses(data?.expenses || []);
+      setTotal(data?.total ?? (data?.expenses ? data.expenses.length : 0));
+      setTotalPages(data?.totalPages ?? 1);
+    };
     try {
-      const data = await getExpenses(businessId, {
-        page,
-        limit: EXPENSES_PAGE_SIZE,
-        category,
-        dateFrom,
-        dateTo,
-      });
-      setExpenses(data.expenses || []);
-      setTotal(data.total ?? (data.expenses ? data.expenses.length : 0));
-      setTotalPages(data.totalPages ?? 1);
+      const data = await getExpenses(
+        businessId,
+        { page, limit: EXPENSES_PAGE_SIZE, category, dateFrom, dateTo },
+        {
+          onCachedData: (cached) => {
+            apply(cached);
+            setLoading(false);
+          },
+        }
+      );
+      apply(data);
     } catch (err) {
       setError(err);
     } finally {

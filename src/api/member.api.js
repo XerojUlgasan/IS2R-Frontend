@@ -2,9 +2,9 @@ import { apiRequest } from "./client";
 
 // Members are scoped to a business (workspace).
 
-// Lists all members of a business.
-export function getMembers(businessId) {
-  return apiRequest(`/api/businesses/${businessId}/members`);
+// Lists all members of a business. `opts` is forwarded to apiRequest.
+export function getMembers(businessId, opts = {}) {
+  return apiRequest(`/api/businesses/${businessId}/members`, opts);
 }
 
 // Invites a new member. payload = { email, role, permissions }.
