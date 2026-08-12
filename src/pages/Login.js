@@ -16,10 +16,12 @@ function Login() {
     setError("");
     setStatus("authenticating");
 
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error: signInError } = await supabase.auth.signInWithPassword(
+      {
+        email,
+        password,
+      },
+    );
 
     if (signInError) {
       setError(signInError.message);
@@ -40,9 +42,11 @@ function Login() {
     }, 1000);
   };
 
-  const buttonBg = status === "granted" ? "bg-surface-container-lowest" : "bg-primary";
+  const buttonBg =
+    status === "granted" ? "bg-surface-container-lowest" : "bg-primary";
   const buttonText = status === "granted" ? "text-primary" : "text-on-primary";
-  const buttonLock = status === "authenticating" ? "opacity-80 pointer-events-none" : "";
+  const buttonLock =
+    status === "authenticating" ? "opacity-80 pointer-events-none" : "";
 
   return (
     <main className="w-full max-w-lg mx-auto bg-surface min-h-screen flex items-center justify-center font-body-md">
@@ -67,10 +71,17 @@ function Login() {
           </div>
           {/* Form Container */}
           <div className="bg-surface-container border border-outline-variant p-lg rounded-none">
-            <form className="flex flex-col gap-md" id="loginForm" onSubmit={handleSubmit}>
+            <form
+              className="flex flex-col gap-md"
+              id="loginForm"
+              onSubmit={handleSubmit}
+            >
               {/* Email Input */}
               <div className="flex flex-col gap-xs relative group">
-                <label className="font-label-md text-label-md text-on-surface-variant uppercase" htmlFor="email">
+                <label
+                  className="font-label-md text-label-md text-on-surface-variant uppercase"
+                  htmlFor="email"
+                >
                   Email Address
                 </label>
                 <input
@@ -87,10 +98,17 @@ function Login() {
               {/* Password Input */}
               <div className="flex flex-col gap-xs relative group mt-sm">
                 <div className="flex justify-between items-end">
-                  <label className="font-label-md text-label-md text-on-surface-variant uppercase" htmlFor="password">
+                  <label
+                    className="font-label-md text-label-md text-on-surface-variant uppercase"
+                    htmlFor="password"
+                  >
                     Password
                   </label>
-                  <button className="font-label-md text-[10px] text-primary underline uppercase" tabIndex={-1} type="button">
+                  <button
+                    className="font-label-md text-[10px] text-primary underline uppercase"
+                    tabIndex={-1}
+                    type="button"
+                  >
                     Reset
                   </button>
                 </div>
@@ -108,7 +126,9 @@ function Login() {
               {/* Error Message */}
               {error && (
                 <div className="border border-error bg-error-container text-on-error-container p-sm font-body-sm text-body-sm flex items-start gap-sm">
-                  <span className="material-symbols-outlined text-[18px] text-error">error</span>
+                  <span className="material-symbols-outlined text-[18px] text-error">
+                    error
+                  </span>
                   <span>{error}</span>
                 </div>
               )}
@@ -127,13 +147,17 @@ function Login() {
                 )}
                 {status === "authenticating" && (
                   <>
-                    <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span>
+                    <span className="material-symbols-outlined text-[18px] animate-spin">
+                      refresh
+                    </span>
                     <span className="ml-sm">Authenticating...</span>
                   </>
                 )}
                 {status === "granted" && (
                   <>
-                    <span className="material-symbols-outlined text-[18px]">check</span>
+                    <span className="material-symbols-outlined text-[18px]">
+                      check
+                    </span>
                     <span className="ml-sm">Access Granted</span>
                   </>
                 )}
@@ -156,9 +180,10 @@ function Login() {
         {/* Decorative technical marks */}
         <div className="absolute top-lg left-lg hidden md:block">
           <div className="font-label-md text-[10px] text-on-surface-variant uppercase opacity-50 tracking-widest leading-loose">
-            SEQ: 091-A<br />
-            TGT: MNL-SYS<br />
-            STATUS: STANDBY
+            Dev: Xeroj
+            <br />
+            {/* TGT: <br /> */}
+            STATUS: LIVE
           </div>
         </div>
         <div className="absolute bottom-lg right-lg hidden md:block">

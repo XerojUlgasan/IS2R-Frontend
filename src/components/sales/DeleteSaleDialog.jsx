@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { deleteSale } from "../../api/sales.api";
 
 // Confirmation dialog for deleting a sale entry.
-function DeleteSaleDialog({ sale, onClose, onDeleted, onUnauthorized }) {
+function DeleteSaleDialog({ sale, businessId, onClose, onDeleted, onUnauthorized }) {
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -10,7 +10,7 @@ function DeleteSaleDialog({ sale, onClose, onDeleted, onUnauthorized }) {
     setError(null);
     setSubmitting(true);
     try {
-      await deleteSale(sale.id);
+      await deleteSale(businessId, sale.id);
       onDeleted(sale.id);
     } catch (err) {
       if (err && err.status === 401) return onUnauthorized();

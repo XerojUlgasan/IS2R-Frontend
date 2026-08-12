@@ -109,7 +109,7 @@ function Materials() {
   // No workspace chosen yet.
   if (!businessId) {
     return (
-      <div className="flex flex-col items-center justify-center gap-md min-h-[60vh] text-center">
+      <div className="flex flex-col items-center justify-center gap-md min-h-[60vh] px-4 text-center">
         <span className="material-symbols-outlined text-[32px] text-primary">inventory_2</span>
         <h2 className="font-headline-md text-headline-md text-primary">No workspace selected</h2>
         <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
@@ -128,14 +128,14 @@ function Materials() {
   return (
     <div className="flex flex-col w-full h-full gap-lg">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-md">
+      <div className="mb-md flex flex-col gap-md md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col">
           <h2 className="font-headline-lg text-headline-lg text-primary tracking-tighter">Materials Inventory</h2>
-          <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl mt-xs">
+          <p className="mt-xs max-w-2xl font-body-md text-body-md text-on-surface-variant">
             Manage raw printing materials, monitor stock levels, and track manufacturing costs across your active catalog.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-md w-full md:w-auto">
+        <div className="flex w-full flex-col items-stretch gap-md sm:flex-row sm:items-center md:w-auto">
           <div className="relative w-full sm:w-64">
             <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">
               search
@@ -163,7 +163,7 @@ function Materials() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-sm mb-lg border-b border-outline overflow-x-auto pb-px">
+      <div className="mb-lg flex gap-sm overflow-x-auto border-b border-outline pb-px">
         <button className={tabClass(tab === "ALL")} onClick={() => setTab("ALL")}>
           All Materials ({counts.all})
         </button>

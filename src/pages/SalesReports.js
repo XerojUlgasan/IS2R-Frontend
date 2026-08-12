@@ -96,7 +96,7 @@ function SalesReports() {
           <h1 className="font-headline-lg text-headline-lg text-primary uppercase tracking-tight">Sales Analytics</h1>
           <p className="font-body-md text-on-surface-variant mt-xs">Revenue &amp; Profit Trajectory</p>
         </div>
-        <div className="flex items-center border border-primary bg-surface p-xs gap-xs">
+        <div className="flex flex-wrap items-center border border-primary bg-surface p-xs gap-xs w-full sm:w-auto">
           {PERIODS.map((p) => (
             <button
               key={p.value}
@@ -141,14 +141,14 @@ function SalesReports() {
           {/* Bento Grid Main Content */}
           <div className="grid grid-cols-12 gap-lg flex-1">
             {/* Large Chart Cell */}
-            <div className="col-span-12 lg:col-span-9 border border-primary bg-surface-bright flex flex-col p-lg relative group transition-colors hover:bg-surface-container-lowest">
-              <div className="absolute top-lg left-lg">
+            <div className="col-span-12 lg:col-span-9 border border-primary bg-surface-bright flex flex-col p-md sm:p-lg relative group transition-colors hover:bg-surface-container-lowest">
+              <div className="absolute top-md left-md sm:top-lg sm:left-lg">
                 <span className="font-headline-md text-headline-md text-primary block">Revenue Timeline</span>
                 <span className="font-label-md text-on-surface-variant uppercase tracking-widest mt-xs block">
                   {TIMELINE_LABELS[period] || ""}
                 </span>
               </div>
-              <div className="flex-1 w-full h-full min-h-[400px] mt-xl pt-lg relative">
+              <div className="flex-1 w-full h-full min-h-[280px] sm:min-h-[400px] mt-16 sm:mt-xl pt-md sm:pt-lg relative">
                 {timeline.length === 0 ? (
                   <div className="w-full h-full flex items-center justify-center text-on-surface-variant font-body-md">
                     No sales recorded for this period.
@@ -175,12 +175,12 @@ function SalesReports() {
             {/* Stats Sidebar */}
             <div className="col-span-12 lg:col-span-3 flex flex-col gap-lg">
               {/* Total Revenue Stat */}
-              <div className="flex-1 border border-primary bg-primary text-on-primary p-lg flex flex-col justify-between group relative overflow-hidden transition-all hover:bg-surface-bright hover:text-primary hover:border-primary min-h-[140px]">
+              <div className="flex-1 border border-primary bg-primary text-on-primary p-md sm:p-lg flex flex-col justify-between group relative overflow-hidden transition-all hover:bg-surface-bright hover:text-primary hover:border-primary min-h-[120px] sm:min-h-[140px]">
                 <span className="font-label-md uppercase tracking-widest border-b border-on-primary/30 pb-xs group-hover:border-primary/30">
                   Total Revenue
                 </span>
-                <div className="mt-xl">
-                  <span className="font-display-lg text-display-lg block tabular-nums group-hover:scale-105 transition-transform origin-left">
+                <div className="mt-lg sm:mt-xl">
+                  <span className="font-display-lg text-[1.35rem] sm:text-display-lg block tabular-nums group-hover:scale-105 transition-transform origin-left">
                     {pesoCompact(kpis.totalRevenue)}
                   </span>
                   {hasRevenueTrend && (
@@ -193,12 +193,12 @@ function SalesReports() {
               </div>
 
               {/* Estimated Profit Stat */}
-              <div className="flex-1 border border-primary bg-surface-bright p-lg flex flex-col justify-between group relative overflow-hidden transition-all hover:border-primary hover:bg-surface-container min-h-[140px]">
+              <div className="flex-1 border border-primary bg-surface-bright p-md sm:p-lg flex flex-col justify-between group relative overflow-hidden transition-all hover:border-primary hover:bg-surface-container min-h-[120px] sm:min-h-[140px]">
                 <span className="font-label-md text-on-surface-variant uppercase tracking-widest border-b border-primary/30 pb-xs group-hover:text-primary">
                   Estimated Profit
                 </span>
-                <div className="mt-xl">
-                  <span className="font-display-lg text-display-lg text-primary block tabular-nums group-hover:-translate-y-1 transition-transform">
+                <div className="mt-lg sm:mt-xl">
+                  <span className="font-display-lg text-[1.35rem] sm:text-display-lg text-primary block tabular-nums group-hover:-translate-y-1 transition-transform">
                     {hasProfit ? pesoCompact(kpis.estimatedProfit) : "—"}
                   </span>
                   {hasMargin && (

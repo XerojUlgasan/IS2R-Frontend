@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 function Landing() {
   return (
     <div className="bg-surface font-body-md text-on-surface">
-      <header className="fixed top-0 w-full z-50 bg-surface border-b border-outline-variant">
-        <div className="h-20 max-w-7xl mx-auto px-margin flex items-center justify-between">
+      <header className="fixed top-0 z-50 w-full border-b border-outline-variant bg-surface">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-margin">
           <div className="flex items-center gap-md">
             <img
               alt="Monolith Inventory Logo"
@@ -55,9 +55,9 @@ function Landing() {
           </div>
         </div>
       </header>
-      <main className="w-full pt-20 bg-surface">
-        <div className="flex flex-col w-full text-on-surface">
-          <section className="relative pt-xl pb-margin px-margin max-w-7xl mx-auto w-full flex flex-col items-center justify-center min-h-[70vh]">
+      <main className="w-full bg-surface pt-20">
+        <div className="flex w-full flex-col text-on-surface">
+          <section className="relative mx-auto flex min-h-[70vh] w-full max-w-7xl flex-col items-center justify-center px-4 pb-margin pt-xl sm:px-6 lg:px-margin">
             <div className="text-center max-w-4xl flex flex-col items-center z-10 relative">
               <div className="inline-block border border-primary px-sm py-xs text-label-md uppercase tracking-widest mb-lg bg-surface relative z-10">
                 Monolith v2.0 is live

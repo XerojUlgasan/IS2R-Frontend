@@ -4,12 +4,12 @@ import React from "react";
 // Clicking the backdrop closes; clicking inside does not.
 function Modal({ title, subtitle, onClose, children }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/40 p-md" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/40 p-sm sm:p-md" onClick={onClose}>
       <div
-        className="w-full max-w-lg bg-surface-container-lowest border-2 border-primary p-xl flex flex-col gap-lg max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg bg-surface-container-lowest border-2 border-primary p-md sm:p-xl flex flex-col gap-md sm:gap-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-sm sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-xs">
             <h2 className="font-headline-lg text-headline-md text-on-surface uppercase tracking-tight">{title}</h2>
             {subtitle && <p className="font-body-sm text-body-sm text-on-surface-variant">{subtitle}</p>}

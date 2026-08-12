@@ -8,6 +8,7 @@ import RecordSaleModal from "../components/sales/RecordSaleModal";
 import SalesFiltersModal from "../components/sales/SalesFiltersModal";
 import DeleteSaleDialog from "../components/sales/DeleteSaleDialog";
 import MarkPaidDialog from "../components/sales/MarkPaidDialog";
+import MarkAbandonedDialog from "../components/sales/MarkAbandonedDialog";
 
 const EMPTY_FILTERS = { status: "", materialId: "", dateFrom: "", dateTo: "", material: null };
 
@@ -105,7 +106,7 @@ function SalesHistory() {
   // No workspace chosen yet.
   if (!businessId) {
     return (
-      <div className="flex flex-col items-center justify-center gap-md min-h-[60vh] text-center">
+      <div className="flex flex-col items-center justify-center gap-md min-h-[60vh] px-4 text-center">
         <span className="material-symbols-outlined text-[32px] text-primary">history</span>
         <h2 className="font-headline-md text-headline-md text-primary">No workspace selected</h2>
         <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
@@ -124,17 +125,17 @@ function SalesHistory() {
   return (
     <div className="flex flex-col w-full h-full gap-lg">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-md mb-md">
+      <div className="mb-md flex flex-col gap-md md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="font-headline-lg text-headline-lg text-primary tracking-tighter uppercase mb-xs">Sales Ledger</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant max-w-xl">
+          <h1 className="mb-xs font-headline-lg text-headline-lg text-primary uppercase tracking-tighter">Sales Ledger</h1>
+          <p className="max-w-xl font-body-md text-body-md text-on-surface-variant">
             Historical record of material usage and associated charges. Review payment statuses and manage outstanding balances.
           </p>
         </div>
-        <div className="flex items-center gap-sm">
+        <div className="flex flex-col gap-sm sm:flex-row sm:items-center">
           <button
             onClick={() => setModal("filters")}
-            className="h-10 px-md bg-surface-container border border-primary flex items-center justify-center gap-xs text-primary font-label-md text-label-md uppercase tracking-widest hover:bg-primary hover:text-on-primary transition-colors"
+            className="flex h-11 items-center justify-center gap-xs border border-primary bg-surface-container px-md text-primary font-label-md text-label-md uppercase tracking-widest transition-colors hover:bg-primary hover:text-on-primary"
           >
             <span className="material-symbols-outlined text-[18px]">filter_list</span>
             Filters
@@ -143,7 +144,7 @@ function SalesHistory() {
             onClick={() => setModal("record")}
             disabled={!can("create_sales")}
             title={can("create_sales") ? "Record Sale" : "You don't have permission to record sales"}
-            className="h-10 px-md bg-primary flex items-center justify-center gap-xs text-on-primary font-label-md text-label-md uppercase tracking-widest hover:bg-surface-container hover:text-primary hover:border hover:border-primary transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:hover:text-on-primary disabled:hover:border-0"
+            className="flex h-11 items-center justify-center gap-xs bg-primary px-md text-on-primary font-label-md text-label-md uppercase tracking-widest transition-colors hover:bg-surface-container hover:text-primary hover:border hover:border-primary disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-primary disabled:hover:text-on-primary disabled:hover:border-0"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
             Record Sale
@@ -186,9 +187,9 @@ function SalesHistory() {
       </div>
 
       {/* Table Container */}
-      <div className="bg-surface border border-primary flex-1 flex flex-col min-h-0">
+      <div className="flex flex-1 flex-col min-h-0 border border-primary bg-surface">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse whitespace-nowrap">
+          <table className="w-full min-w-[900px] border-collapse whitespace-nowrap text-left">
             <thead>
               <tr className="bg-surface-container border-b border-primary">
                 <th className="p-md font-label-md text-label-md text-primary uppercase tracking-widest w-[180px]">Material</th>
@@ -241,7 +242,10 @@ function SalesHistory() {
                 !error &&
                 sales.map((sale) => {
                   const materialName = sale.material_name || sale.material?.name || "Untitled material";
-                  const isPaid = String(sale.status || "").toUpperCase() === "PAID";
+                  const saleStatus = String(sale.status || "").toUpperCase();
+                  const isPaid = saleStatus === "PAID";
+                  const isScrap = saleStatus === "SCRAP";
+                  const isPending = saleStatus === "PENDING";
                   const createdBy = sale.created_by_name || sale.createdByName || "—";
                   return (
                     <tr key={sale.id} className="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
@@ -258,7 +262,7 @@ function SalesHistory() {
                       <td className="p-md font-mono text-on-surface-variant">{formatDate(sale.created_at || sale.createdAt)}</td>
                       <td className="p-md text-right">
                         <div className="flex items-center justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                          {!isPaid && (
+                          {!isPaid && !isScrap && (
                             <button
                               onClick={() => setModal({ type: "paid", sale })}
                               disabled={!can("update_sales")}
@@ -266,6 +270,16 @@ function SalesHistory() {
                               title={can("update_sales") ? "Mark Paid" : "You don't have permission to update sales"}
                             >
                               <span className="material-symbols-outlined text-[16px]">check</span>
+                            </button>
+                          )}
+                          {isPending && (
+                            <button
+                              onClick={() => setModal({ type: "abandoned", sale })}
+                              disabled={!can("update_sales")}
+                              className="w-7 h-7 flex items-center justify-center border border-outline-variant hover:border-error hover:text-error transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-outline-variant disabled:hover:bg-transparent disabled:hover:text-inherit"
+                              title={can("update_sales") ? "Mark Abandoned" : "You don't have permission to update sales"}
+                            >
+                              <span className="material-symbols-outlined text-[16px]">block</span>
                             </button>
                           )}
                           <button
@@ -319,10 +333,13 @@ function SalesHistory() {
         <SalesFiltersModal businessId={businessId} initial={filters} onClose={() => setModal(null)} onApply={applyFilters} />
       )}
       {modal?.type === "delete" && (
-        <DeleteSaleDialog sale={modal.sale} onClose={() => setModal(null)} onDeleted={handleMutated} onUnauthorized={goToLogin} />
+        <DeleteSaleDialog sale={modal.sale} businessId={businessId} onClose={() => setModal(null)} onDeleted={handleMutated} onUnauthorized={goToLogin} />
       )}
       {modal?.type === "paid" && (
-        <MarkPaidDialog sale={modal.sale} onClose={() => setModal(null)} onUpdated={handleMutated} onUnauthorized={goToLogin} />
+        <MarkPaidDialog sale={modal.sale} businessId={businessId} onClose={() => setModal(null)} onUpdated={handleMutated} onUnauthorized={goToLogin} />
+      )}
+      {modal?.type === "abandoned" && (
+        <MarkAbandonedDialog sale={modal.sale} businessId={businessId} onClose={() => setModal(null)} onUpdated={handleMutated} onUnauthorized={goToLogin} />
       )}
     </div>
   );

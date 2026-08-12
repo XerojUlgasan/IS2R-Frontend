@@ -25,16 +25,16 @@ export function createSale(businessId, payload) {
 }
 
 // Updates a sale's editable fields (e.g. mark paid). payload = { status?, remarks? }.
-export function updateSale(saleId, payload) {
-  return apiRequest(`/api/sales/${saleId}`, {
+export function updateSale(businessId, saleId, payload) {
+  return apiRequest(`/api/businesses/${businessId}/sales/${saleId}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
 }
 
 // Deletes a sale.
-export function deleteSale(saleId) {
-  return apiRequest(`/api/sales/${saleId}`, {
+export function deleteSale(businessId, saleId) {
+  return apiRequest(`/api/businesses/${businessId}/sales/${saleId}`, {
     method: "DELETE",
   });
 }

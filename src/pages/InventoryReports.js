@@ -88,7 +88,7 @@ function InventoryReports() {
           <h1 className="font-headline-lg text-headline-lg text-primary uppercase tracking-tight">Inventory Analytics</h1>
           <p className="font-body-md text-on-surface-variant mt-xs">Stock Health &amp; Consumption</p>
         </div>
-        <div className="flex items-center border border-primary bg-surface p-xs gap-xs">
+        <div className="flex flex-wrap items-center border border-primary bg-surface p-xs gap-xs w-full sm:w-auto">
           {PERIODS.map((p) => (
             <button
               key={p.value}
@@ -133,7 +133,7 @@ function InventoryReports() {
           {/* KPI Cards */}
           <div className="grid grid-cols-12 gap-lg">
             {/* Inventory value (inverted highlight) */}
-            <div className="col-span-12 sm:col-span-6 lg:col-span-3 border border-primary bg-primary text-on-primary p-lg flex flex-col justify-between group transition-all hover:bg-surface-bright hover:text-primary hover:border-primary min-h-[160px]">
+            <div className="col-span-12 sm:col-span-6 lg:col-span-3 border border-primary bg-primary text-on-primary p-md sm:p-lg flex flex-col justify-between group transition-all hover:bg-surface-bright hover:text-primary hover:border-primary min-h-[140px] sm:min-h-[160px]">
               <span className="font-label-md uppercase tracking-widest border-b border-on-primary/30 pb-xs group-hover:border-primary/30">
                 Inventory Value On Hand
               </span>
@@ -188,13 +188,13 @@ function InventoryReports() {
           {/* Main content: movement chart + side panels */}
           <div className="grid grid-cols-12 gap-lg">
             {/* Stock movement chart */}
-            <div className="col-span-12 lg:col-span-8 border border-primary bg-surface-bright flex flex-col p-lg">
-              <div className="flex items-start justify-between">
+            <div className="col-span-12 lg:col-span-8 border border-primary bg-surface-bright flex flex-col p-md sm:p-lg">
+              <div className="flex flex-col gap-sm sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <span className="font-headline-md text-headline-md text-primary block">Stock Movement</span>
                   <span className="font-label-md text-on-surface-variant uppercase tracking-widest mt-xs block">Stocked In vs Consumed</span>
                 </div>
-                <div className="flex items-center gap-md">
+                <div className="flex flex-wrap items-center gap-sm sm:gap-md">
                   <div className="flex items-center gap-xs">
                     <span className="w-3 h-3 bg-primary inline-block"></span>
                     <span className="font-label-md text-on-surface-variant uppercase tracking-widest">In</span>
@@ -237,9 +237,9 @@ function InventoryReports() {
             {/* Side panels */}
             <div className="col-span-12 lg:col-span-4 flex flex-col gap-lg">
               {/* Stock status donut */}
-              <div className="border border-primary bg-surface-bright p-lg flex flex-col gap-md">
+              <div className="border border-primary bg-surface-bright p-md sm:p-lg flex flex-col gap-md">
                 <span className="font-headline-md text-body-lg text-primary">Stock Status</span>
-                <div className="flex items-center gap-lg">
+                <div className="flex flex-col gap-md sm:flex-row sm:items-center sm:gap-lg">
                   <svg viewBox="0 0 100 100" className="w-[104px] h-[104px] -rotate-90 shrink-0">
                     <circle cx="50" cy="50" r={R} fill="none" className="text-surface-container-high" stroke="currentColor" strokeWidth="12" />
                     <circle
@@ -267,7 +267,7 @@ function InventoryReports() {
               </div>
 
               {/* Material type distribution */}
-              <div className="border border-primary bg-surface-bright p-lg flex flex-col gap-md flex-1">
+              <div className="border border-primary bg-surface-bright p-md sm:p-lg flex flex-col gap-md flex-1">
                 <span className="font-headline-md text-body-lg text-primary">Material Types</span>
                 {typeDistribution.length === 0 ? (
                   <div className="flex-1 flex items-center justify-center text-on-surface-variant font-body-sm py-lg">No materials yet.</div>

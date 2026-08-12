@@ -116,7 +116,7 @@ function Stocks() {
   // No workspace chosen yet.
   if (!businessId) {
     return (
-      <div className="flex flex-col items-center justify-center gap-md min-h-[60vh] text-center">
+      <div className="flex flex-col items-center justify-center gap-md min-h-[60vh] px-4 text-center">
         <span className="material-symbols-outlined text-[32px] text-primary">package_2</span>
         <h2 className="font-headline-md text-headline-md text-primary">No workspace selected</h2>
         <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
@@ -135,17 +135,17 @@ function Stocks() {
   return (
     <div className="flex flex-col w-full h-full gap-lg">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-md">
+      <div className="mb-md flex flex-col gap-md md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col">
           <h2 className="font-headline-lg text-headline-lg text-primary tracking-tighter">Stock History</h2>
-          <p className="font-body-md text-body-md text-on-surface-variant max-w-2xl mt-xs">
+          <p className="mt-xs max-w-2xl font-body-md text-body-md text-on-surface-variant">
             Every stock batch recorded across your materials, with quantities, manufacturing cost, and consumption.
           </p>
         </div>
-        <div className="flex items-center gap-sm shrink-0">
+        <div className="flex flex-col gap-sm sm:flex-row sm:items-center">
           <button
             onClick={() => setShowFilters(true)}
-            className="h-10 px-md flex items-center justify-center gap-sm border border-outline bg-surface text-on-surface hover:bg-surface-container-highest transition-colors font-label-md text-label-md uppercase tracking-widest whitespace-nowrap"
+            className="flex h-11 items-center justify-center gap-sm border border-outline bg-surface px-md text-on-surface font-label-md text-label-md uppercase tracking-widest whitespace-nowrap transition-colors hover:bg-surface-container-highest"
           >
             <span className="material-symbols-outlined text-[18px]">filter_list</span>
             Filter
@@ -154,7 +154,7 @@ function Stocks() {
             onClick={() => setShowAddStock(true)}
             disabled={!can("add_stocks")}
             title={can("add_stocks") ? "Add Stock" : "You don't have permission to add stock"}
-            className="h-10 px-md flex items-center justify-center gap-sm bg-primary text-on-primary hover:bg-primary/90 transition-colors font-label-md text-label-md uppercase tracking-widest whitespace-nowrap border-none disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-primary"
+            className="flex h-11 items-center justify-center gap-sm border-none bg-primary px-md text-on-primary font-label-md text-label-md uppercase tracking-widest whitespace-nowrap transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-primary"
           >
             <span className="material-symbols-outlined text-[18px]">add</span>
             Add Stock

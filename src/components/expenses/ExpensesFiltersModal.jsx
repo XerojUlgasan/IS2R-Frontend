@@ -23,12 +23,12 @@ function ExpensesFiltersModal({ initial, onClose, onApply }) {
   const labelClass = "font-label-md text-label-md uppercase tracking-widest text-on-surface-variant";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/40 p-md" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/40 p-sm sm:p-md" onClick={onClose}>
       <div
-        className="w-full max-w-lg bg-surface-container-lowest border-2 border-primary p-xl flex flex-col gap-lg max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg bg-surface-container-lowest border-2 border-primary p-md sm:p-xl flex flex-col gap-md sm:gap-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-sm sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-xs">
             <h2 className="font-headline-lg text-headline-md text-on-surface uppercase tracking-tight">Filter Expenses</h2>
             <p className="font-body-sm text-body-sm text-on-surface-variant">Narrow the ledger by date, status, or category.</p>
@@ -53,7 +53,7 @@ function ExpensesFiltersModal({ initial, onClose, onApply }) {
             }}
           />
 
-          <div className="grid grid-cols-2 gap-md">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
             <div className="flex flex-col gap-xs">
               <label className={labelClass} htmlFor="dateFrom">
                 Date From
@@ -82,25 +82,25 @@ function ExpensesFiltersModal({ initial, onClose, onApply }) {
             </select>
           </div>
 
-          <div className="flex justify-between gap-sm pt-md border-t border-outline-variant mt-sm">
+          <div className="flex flex-col-reverse gap-sm pt-md border-t border-outline-variant mt-sm sm:flex-row sm:justify-between">
             <button
               type="button"
               onClick={handleClear}
-              className="px-lg py-md border border-error text-error font-label-md text-label-md uppercase tracking-widest hover:bg-error-container transition-colors"
+              className="w-full sm:w-auto px-lg py-md border border-error text-error font-label-md text-label-md uppercase tracking-widest hover:bg-error-container transition-colors"
             >
               Clear All
             </button>
-            <div className="flex gap-sm">
+            <div className="flex flex-col gap-sm sm:flex-row">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-lg py-md border border-primary text-primary font-label-md text-label-md uppercase tracking-widest hover:bg-surface-container transition-colors"
+                className="w-full sm:w-auto px-lg py-md border border-primary text-primary font-label-md text-label-md uppercase tracking-widest hover:bg-surface-container transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-lg py-md bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest border border-primary hover:bg-surface-container-lowest hover:text-primary transition-colors flex items-center gap-sm"
+                className="w-full sm:w-auto px-lg py-md bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest border border-primary hover:bg-surface-container-lowest hover:text-primary transition-colors flex items-center justify-center gap-sm"
               >
                 <span className="material-symbols-outlined text-[18px]">filter_list</span>
                 Apply Filters

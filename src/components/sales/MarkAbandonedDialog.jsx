@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { updateSale } from "../../api/sales.api";
 
-// Confirmation dialog for marking a sale as paid.
-function MarkPaidDialog({ sale, businessId, onClose, onUpdated, onUnauthorized }) {
+// Confirmation dialog for marking a sale as abandoned.
+function MarkAbandonedDialog({ sale, businessId, onClose, onUpdated, onUnauthorized }) {
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -10,7 +10,7 @@ function MarkPaidDialog({ sale, businessId, onClose, onUpdated, onUnauthorized }
     setError(null);
     setSubmitting(true);
     try {
-      await updateSale(businessId, sale.id, { status: "PAID" });
+      await updateSale(businessId, sale.id, { status: "ABANDONED" });
       onUpdated(sale.id);
     } catch (err) {
       if (err && err.status === 401) return onUnauthorized();
@@ -29,11 +29,11 @@ function MarkPaidDialog({ sale, businessId, onClose, onUpdated, onUnauthorized }
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-md">
-          <span className="material-symbols-outlined text-[32px] text-primary">paid</span>
+          <span className="material-symbols-outlined text-[32px] text-error">block</span>
           <div className="flex flex-col gap-xs">
-            <h2 className="font-headline-lg text-headline-md text-on-surface uppercase tracking-tight">Mark as Paid</h2>
+            <h2 className="font-headline-lg text-headline-md text-on-surface uppercase tracking-tight">Mark as Abandoned</h2>
             <p className="font-body-sm text-body-sm text-on-surface-variant">
-              Mark the sale for <span className="font-bold text-on-surface">{label}</span> as paid?
+              Mark the sale for <span className="font-bold text-on-surface">{label}</span> as abandoned? This indicates the payment will no longer be collected.
             </p>
           </div>
         </div>
@@ -57,7 +57,7 @@ function MarkPaidDialog({ sale, businessId, onClose, onUpdated, onUnauthorized }
             type="button"
             onClick={handleConfirm}
             disabled={submitting}
-            className="px-lg py-md bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest border border-primary hover:bg-surface-container-lowest hover:text-primary transition-colors flex items-center gap-sm disabled:opacity-60 disabled:pointer-events-none"
+            className="px-lg py-md bg-error text-on-error font-label-md text-label-md uppercase tracking-widest border border-error hover:bg-surface-container-lowest hover:text-error transition-colors flex items-center gap-sm disabled:opacity-60 disabled:pointer-events-none"
           >
             {submitting ? (
               <>
@@ -66,8 +66,8 @@ function MarkPaidDialog({ sale, businessId, onClose, onUpdated, onUnauthorized }
               </>
             ) : (
               <>
-                <span className="material-symbols-outlined text-[18px]">check</span>
-                Mark Paid
+                <span className="material-symbols-outlined text-[18px]">block</span>
+                Mark Abandoned
               </>
             )}
           </button>
@@ -77,4 +77,4 @@ function MarkPaidDialog({ sale, businessId, onClose, onUpdated, onUnauthorized }
   );
 }
 
-export default MarkPaidDialog;
+export default MarkAbandonedDialog;

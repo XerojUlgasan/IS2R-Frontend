@@ -131,7 +131,7 @@ function Members() {
   // No workspace chosen yet.
   if (!businessId) {
     return (
-      <div className="flex flex-col items-center justify-center gap-md min-h-[60vh] text-center">
+      <div className="flex flex-col items-center justify-center gap-md min-h-[60vh] px-4 text-center">
         <span className="material-symbols-outlined text-[32px] text-primary">group</span>
         <h2 className="font-headline-md text-headline-md text-primary">No workspace selected</h2>
         <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
@@ -148,8 +148,8 @@ function Members() {
   }
 
   return (
-    <div className="flex flex-col w-full h-full min-h-[calc(100vh-64px)] relative">
-      <div className="flex justify-between items-end mb-lg relative z-10">
+    <div className="relative flex h-full min-h-[calc(100vh-64px)] w-full flex-col">
+      <div className="relative z-10 mb-lg flex flex-col gap-md md:flex-row md:items-end md:justify-between">
         <div className="flex flex-col gap-xs">
           <span className="font-label-md text-on-surface-variant uppercase tracking-widest flex items-center gap-sm">
             <span className="w-1.5 h-1.5 bg-primary rounded-full"></span>
@@ -166,7 +166,7 @@ function Members() {
         {isOwner && (
           <button
             onClick={() => setShowInvite(true)}
-            className="group flex items-center gap-sm bg-primary text-on-primary px-lg py-sm font-label-md text-label-md uppercase tracking-wider hover:bg-surface-container-lowest hover:text-primary border border-primary transition-all duration-300 shadow-md hover:shadow-xl relative overflow-hidden"
+            className="group flex h-11 items-center justify-center gap-sm border border-primary bg-primary px-lg py-sm font-label-md text-label-md uppercase tracking-wider text-on-primary transition-all duration-300 shadow-md hover:bg-surface-container-lowest hover:text-primary hover:shadow-xl relative overflow-hidden"
           >
             <span className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></span>
             <span className="material-symbols-outlined text-[18px]">person_add</span>
@@ -174,8 +174,8 @@ function Members() {
           </button>
         )}
       </div>
-      <div className="grid grid-cols-12 gap-lg mb-lg">
-        <div className="col-span-12 md:col-span-6 bg-surface-container border border-surface-variant p-lg relative overflow-hidden group">
+      <div className="mb-lg grid grid-cols-1 gap-lg md:grid-cols-2">
+        <div className="col-span-1 bg-surface-container border border-surface-variant p-lg relative overflow-hidden group">
           <div className="absolute -right-4 -top-4 w-32 h-32 bg-primary/5 rounded-full blur-xl group-hover:scale-150 transition-transform duration-700"></div>
           <div className="flex items-center justify-between mb-md">
             <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Total Users</span>
@@ -193,24 +193,24 @@ function Members() {
         </div>
       </div>
       <div className="flex-1 bg-surface-container border border-surface-variant flex flex-col relative z-10 shadow-lg">
-        <div className="px-lg py-md border-b border-surface-variant flex items-center justify-between bg-surface-bright/50 backdrop-blur-sm sticky top-0 z-20">
-          <div className="flex items-center gap-md">
+        <div className="sticky top-0 z-20 flex flex-col gap-md border-b border-surface-variant bg-surface-bright/50 px-lg py-md backdrop-blur-sm md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-md md:flex-row md:items-center">
             <div className="relative">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
               <input
-                className="pl-10 pr-4 py-2 bg-background border border-surface-variant text-on-surface font-body-sm text-body-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-64 transition-all"
+                className="w-full min-w-0 rounded-none border border-surface-variant bg-background py-2 pl-10 pr-4 font-body-sm text-body-sm text-on-surface transition-all focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary md:w-64"
                 placeholder="Search members..."
                 type="text"
               />
             </div>
             <div className="h-6 w-px bg-surface-variant"></div>
-            <div className="flex gap-sm">
+            <div className="flex flex-wrap gap-sm">
               <button className="px-sm py-1 font-label-md text-label-md text-on-surface bg-surface-variant uppercase tracking-wider">All</button>
               <button className="px-sm py-1 font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 uppercase tracking-wider transition-colors">Owners</button>
               <button className="px-sm py-1 font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-variant/50 uppercase tracking-wider transition-colors">Staff</button>
             </div>
           </div>
-          <button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">filter_list</button>
+          <button className="flex h-11 w-11 items-center justify-center material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">filter_list</button>
         </div>
 
         {loading && (

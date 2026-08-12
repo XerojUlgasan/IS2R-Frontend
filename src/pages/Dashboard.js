@@ -40,6 +40,12 @@ function SaleStatusBadge({ status }) {
   if (s === "PAID") {
     return <span className="inline-block px-sm py-xs bg-primary text-on-primary font-label-md text-[10px] uppercase tracking-widest">Paid</span>;
   }
+  if (s === "ABANDONED") {
+    return <span className="inline-block px-sm py-xs border border-error text-error font-label-md text-[10px] uppercase tracking-widest">Abandoned</span>;
+  }
+  if (s === "SCRAP") {
+    return <span className="inline-block px-sm py-xs border border-outline text-on-surface-variant font-label-md text-[10px] uppercase tracking-widest">Scrap</span>;
+  }
   return <span className="inline-block px-sm py-xs border border-primary text-primary font-label-md text-[10px] uppercase tracking-widest">Pending</span>;
 }
 
