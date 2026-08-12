@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useActiveBusiness } from "../context/ActiveBusinessContext";
 
 // Granted member_actions columns returned per business by GET /api/businesses.
@@ -24,7 +24,7 @@ export function usePermissions() {
   const { activeBusiness } = useActiveBusiness();
   const role = String(activeBusiness?.role || "").toLowerCase();
   const isOwner = role === "owner";
-  const actions = activeBusiness?.actions || [];
+  const actions = useMemo(() => activeBusiness?.actions || [], [activeBusiness?.actions]);
 
   const can = useCallback(
     (action) => isOwner || actions.includes(action),
