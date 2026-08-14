@@ -110,7 +110,8 @@ function Calendar() {
       toDate = `${fromDate}-${last}`;
     }
     const dateLabel = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
-    exportCalendarExcel(detail, { businessName, dateLabel, fromDate, toDate });
+    const periodType = detailType === "day" ? "Daily" : "Monthly";
+    exportCalendarExcel(detail, { businessName, dateLabel, fromDate, toDate, periodType });
   };
 
   // No workspace.
