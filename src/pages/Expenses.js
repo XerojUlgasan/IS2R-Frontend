@@ -287,6 +287,10 @@ function Expenses() {
                 expenses.map((expense) => {
                   const createdBy =
                     expense.created_by_name || expense.createdByName || "—";
+                  const expenseDate = expense.created_at || expense.createdAt;
+                  const isOlderThanOneDay = expenseDate
+                    ? Date.now() - new Date(expenseDate).getTime() > 24 * 60 * 60 * 1000
+                    : false;
                   return (
                     <tr
                       key={expense.id}
@@ -330,15 +334,15 @@ function Expenses() {
                             </span>
                           </button>
                           <button
-                            onClick={() =>
-                              setModal({ type: "delete", expense })
-                            }
-                            disabled={!can("delete_expense")}
+                            onClick={() => setModal({ type: "delete", expense })}
+                            disabled={!can("delete_expense") || isOlderThanOneDay}
                             className="w-7 h-7 flex items-center justify-center border border-outline-variant hover:border-error hover:text-error transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-outline-variant disabled:hover:text-inherit"
                             title={
-                              can("delete_expense")
-                                ? "Delete"
-                                : "You don't have permission to delete expenses"
+                              !can("delete_expense")
+                                ? "You don't have permission to delete expenses"
+                                : isOlderThanOneDay
+                                ? "Cannot delete expenses older than 1 day"
+                                : "Delete"
                             }
                           >
                             <span className="material-symbols-outlined text-[16px]">

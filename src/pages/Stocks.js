@@ -8,6 +8,8 @@ import { clearMaterialSearchCache } from "../hooks/useMaterialSearch";
 import StocksFiltersModal from "../components/stocks/StocksFiltersModal";
 import AddStockEntryModal from "../components/stocks/AddStockEntryModal";
 import StockHistoryModal from "../components/stocks/StockHistoryModal";
+import EditStockModal from "../components/stocks/EditStockModal";
+import DeleteStockDialog from "../components/stocks/DeleteStockDialog";
 
 const EMPTY_FILTERS = { status: "", materialId: "", dateFrom: "", dateTo: "", material: null };
 
@@ -69,6 +71,8 @@ function Stocks() {
   const [showFilters, setShowFilters] = useState(false);
   const [showAddStock, setShowAddStock] = useState(false);
   const [historyStock, setHistoryStock] = useState(null);
+  const [editStock, setEditStock] = useState(null);
+  const [deleteStockItem, setDeleteStockItem] = useState(null);
 
   const { stocks, total, totalPages, loading, error, refetch } = useStocks(businessId, page, filters);
   const { can } = usePermissions();
@@ -106,6 +110,13 @@ function Stocks() {
   const handleStockAdded = () => {
     clearMaterialSearchCache();
     setShowAddStock(false);
+    refetch();
+  };
+
+  const handleStockMutated = () => {
+    clearMaterialSearchCache();
+    setEditStock(null);
+    setDeleteStockItem(null);
     refetch();
   };
 
@@ -255,6 +266,9 @@ function Stocks() {
                 const sold = Number(stock.quantity_sold) || 0;
                 const remaining = (Number(stock.quantity) || 0) - sold;
                 const materialName = stock.material_name || stock.material?.name || "Untitled material";
+                const isOlderThanOneDay = stock.created_at
+                  ? Date.now() - new Date(stock.created_at).getTime() > 24 * 60 * 60 * 1000
+                  : false;
                 return (
                   <tr key={stock.id} className="hover:bg-surface-container transition-colors border-b border-outline">
                     <td className="py-md px-md">
@@ -286,14 +300,44 @@ function Stocks() {
                       {formatDate(stock.created_at || stock.createdAt)}
                     </td>
                     <td className="py-md px-md text-right">
-                      <button
-                        onClick={() => setHistoryStock(stock)}
-                        className="inline-flex items-center gap-xs px-md py-sm border border-outline text-on-surface hover:border-primary hover:text-primary transition-colors font-label-md text-label-md uppercase tracking-widest"
-                        title="View consumption history"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">history</span>
-                        History
-                      </button>
+                      <div className="flex items-center justify-end gap-xs">
+                        <button
+                          onClick={() => setEditStock(stock)}
+                          disabled={!can("update_stocks") || isOlderThanOneDay}
+                          className="w-7 h-7 flex items-center justify-center border border-outline-variant hover:border-primary hover:text-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-outline-variant disabled:hover:text-inherit"
+                          title={
+                            !can("update_stocks")
+                              ? "You don't have permission to update stocks"
+                              : isOlderThanOneDay
+                              ? "Cannot edit stocks older than 1 day"
+                              : "Edit"
+                          }
+                        >
+                          <span className="material-symbols-outlined text-[16px]">edit</span>
+                        </button>
+                        <button
+                          onClick={() => setDeleteStockItem(stock)}
+                          disabled={!can("delete_stocks") || isOlderThanOneDay}
+                          className="w-7 h-7 flex items-center justify-center border border-outline-variant hover:border-error hover:text-error transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-outline-variant disabled:hover:text-inherit"
+                          title={
+                            !can("delete_stocks")
+                              ? "You don't have permission to delete stocks"
+                              : isOlderThanOneDay
+                              ? "Cannot delete stocks older than 1 day"
+                              : "Delete"
+                          }
+                        >
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                        <button
+                          onClick={() => setHistoryStock(stock)}
+                          className="inline-flex items-center gap-xs px-md py-sm border border-outline text-on-surface hover:border-primary hover:text-primary transition-colors font-label-md text-label-md uppercase tracking-widest"
+                          title="View consumption history"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">history</span>
+                          History
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -340,6 +384,24 @@ function Stocks() {
       )}
       {historyStock && (
         <StockHistoryModal businessId={businessId} stock={historyStock} onClose={() => setHistoryStock(null)} />
+      )}
+      {editStock && (
+        <EditStockModal
+          stock={editStock}
+          businessId={businessId}
+          onClose={() => setEditStock(null)}
+          onSaved={handleStockMutated}
+          onUnauthorized={goToLogin}
+        />
+      )}
+      {deleteStockItem && (
+        <DeleteStockDialog
+          stock={deleteStockItem}
+          businessId={businessId}
+          onClose={() => setDeleteStockItem(null)}
+          onDeleted={handleStockMutated}
+          onUnauthorized={goToLogin}
+        />
       )}
     </div>
   );

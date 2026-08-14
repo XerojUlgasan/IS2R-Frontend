@@ -82,6 +82,7 @@ function AddStockEntryModal({ businessId, onClose, onSaved, onUnauthorized }) {
             <MaterialSearchSelect businessId={businessId} value={material} onChange={setMaterial} />
           </div>
 
+
           <div className="grid grid-cols-2 gap-md">
             <div className="flex flex-col gap-xs">
               <label className={labelClass} htmlFor="quantity">

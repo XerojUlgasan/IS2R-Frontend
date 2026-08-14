@@ -7,6 +7,7 @@ function InviteUserModal({ onClose, onInvite }) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState(MEMBER_ROLE_OPTIONS[0].value);
   const [permissions, setPermissions] = useState([]);
+  const [percentageCut, setPercentageCut] = useState("");
   const [fieldError, setFieldError] = useState("");
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -25,7 +26,9 @@ function InviteUserModal({ onClose, onInvite }) {
 
     setSubmitting(true);
     try {
-      await onInvite({ email: trimmed, role, permissions });
+      const payload = { email: trimmed, role, permissions };
+      if (role === "Shareholder") payload.cut_by_percentage = percentageCut === "" ? null : Number(percentageCut);
+      await onInvite(payload);
     } catch (err) {
       if (err && err.status === 401) return; // caller handles redirect
       setError(err);
@@ -90,10 +93,29 @@ function InviteUserModal({ onClose, onInvite }) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-sm">
-            <span className={labelClass}>Allowed Actions</span>
-            <PermissionsPicker value={permissions} onChange={setPermissions} />
-          </div>
+          {role === "Shareholder" ? (
+            <div className="flex flex-col gap-xs">
+              <label className={labelClass} htmlFor="percentageCut">
+                Percentage Cut (%)
+              </label>
+              <input
+                className={fieldClass}
+                id="percentageCut"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                placeholder="e.g. 25"
+                value={percentageCut}
+                onChange={(e) => setPercentageCut(e.target.value)}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-sm">
+              <span className={labelClass}>Allowed Actions</span>
+              <PermissionsPicker value={permissions} onChange={setPermissions} />
+            </div>
+          )}
 
           {fieldError && <span className="font-body-sm text-body-sm text-error">{fieldError}</span>}
           {error && (

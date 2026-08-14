@@ -53,32 +53,32 @@ export function exportCalendarExcel(detail, meta = {}) {
   rows.push([
     cell(businessName, { font: FONT_TITLE, alignment: ALIGN_LEFT }),
     cell("", {}), cell("", {}), cell("", {}), cell("", {}),
-    cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}),
+    cell("", {}), cell("", {}), cell("", {}), cell("", {}),
   ]);
 
   // Row 1: Subtitle (report type)
   rows.push([
     cell("Sales Calendar Report", { font: FONT_SUBTITLE, alignment: ALIGN_LEFT }),
     cell("", {}), cell("", {}), cell("", {}), cell("", {}),
-    cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}),
+    cell("", {}), cell("", {}), cell("", {}), cell("", {}),
   ]);
 
   // Row 2: Date generated
   rows.push([
     cell(`Generated: ${dateLabel}`, { font: FONT_BODY, alignment: ALIGN_LEFT }),
     cell("", {}), cell("", {}), cell("", {}), cell("", {}),
-    cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}),
+    cell("", {}), cell("", {}), cell("", {}), cell("", {}),
   ]);
 
   // Row 3: Period
   rows.push([
     cell(`Period: ${fromDate} to ${toDate}`, { font: FONT_BODY, alignment: ALIGN_LEFT }),
     cell("", {}), cell("", {}), cell("", {}), cell("", {}),
-    cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}),
+    cell("", {}), cell("", {}), cell("", {}), cell("", {}),
   ]);
 
   // Row 4: Spacer
-  rows.push([cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {})]);
+  rows.push([cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {})]);
 
   // ── Summary Section ───────────────────────────────────────────────────────
 
@@ -88,7 +88,6 @@ export function exportCalendarExcel(detail, meta = {}) {
 
   rows.push([
     cell("SUMMARY", { font: FONT_BOLD, fill: FILL_SUMMARY, border: BORDER_THIN, alignment: ALIGN_LEFT }),
-    cell("", { fill: FILL_SUMMARY, border: BORDER_THIN }),
     cell("", { fill: FILL_SUMMARY, border: BORDER_THIN }),
     cell("", { fill: FILL_SUMMARY, border: BORDER_THIN }),
     cell("", { fill: FILL_SUMMARY, border: BORDER_THIN }),
@@ -121,18 +120,17 @@ export function exportCalendarExcel(detail, meta = {}) {
       cell("", { fill: FILL_SUMMARY, border: BORDER_THIN }),
       cell("", { fill: FILL_SUMMARY, border: BORDER_THIN }),
       cell("", { fill: FILL_SUMMARY, border: BORDER_THIN }),
-      cell("", { fill: FILL_SUMMARY, border: BORDER_THIN }),
     ]);
   });
 
   // Spacer
-  rows.push([cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {})]);
+  rows.push([cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {}), cell("", {})]);
 
   // ── Material Table ────────────────────────────────────────────────────────
 
   const headerStyle = { font: FONT_HEADER, fill: FILL_PRIMARY, border: BORDER_THIN, alignment: ALIGN_CENTER };
 
-  const headers = ["Material", "Unit", "Stock Added", "Consumed", "Sales Count", "Sales Amount (₱)", "Scrap Qty", "Abandoned Qty", "Deleted Sales", "Deleted Stocks"];
+  const headers = ["Material", "Stock Added", "Consumed", "Sales Count", "Sales Amount (₱)", "Scrap Qty", "Abandoned Qty", "Deleted Sales", "Deleted Stocks"];
   rows.push(headers.map((h) => cell(h, headerStyle)));
 
   materials.forEach((m, i) => {
@@ -145,7 +143,6 @@ export function exportCalendarExcel(detail, meta = {}) {
 
     rows.push([
       cell(m.name || "Untitled", bodyStyle),
-      cell(m.unit || "-", { ...bodyStyle, alignment: ALIGN_CENTER }),
       cell(m.stockAdded ?? 0, numStyle),
       cell(m.consumed ?? 0, numStyle),
       cell(m.salesCount ?? 0, numStyle),
@@ -166,7 +163,6 @@ export function exportCalendarExcel(detail, meta = {}) {
 
   rows.push([
     cell("TOTAL", totalLabelStyle),
-    cell("", { fill: FILL_TOTAL, border: BORDER_THIN }),
     cell(detail?.totalStockAdded ?? 0, totalStyle),
     cell(detail?.totalConsumed ?? 0, totalStyle),
     cell(detail?.totalSalesCount ?? 0, totalStyle),
@@ -183,14 +179,13 @@ export function exportCalendarExcel(detail, meta = {}) {
 
   // Column widths
   ws["!cols"] = [
-    { wch: 24 }, // Material
-    { wch: 10 }, // Unit
+    { wch: 28 }, // Material
     { wch: 14 }, // Stock Added
     { wch: 12 }, // Consumed
     { wch: 12 }, // Sales Count
     { wch: 18 }, // Sales Amount
-    { wch: 10 }, // Scrap
-    { wch: 12 }, // Abandoned
+    { wch: 10 }, // Scrap Qty
+    { wch: 14 }, // Abandoned Qty
     { wch: 14 }, // Deleted Sales
     { wch: 14 }, // Deleted Stocks
   ];
@@ -205,10 +200,10 @@ export function exportCalendarExcel(detail, meta = {}) {
 
   // Merge title cells across all columns for visual impact
   ws["!merges"] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }, // Title row
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } }, // Subtitle row
-    { s: { r: 2, c: 0 }, e: { r: 2, c: 9 } }, // Date row
-    { s: { r: 3, c: 0 }, e: { r: 3, c: 9 } }, // Period row
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }, // Title row
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 8 } }, // Subtitle row
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 8 } }, // Date row
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 8 } }, // Period row
   ];
 
   const wb = XLSX.utils.book_new();

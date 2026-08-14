@@ -98,10 +98,6 @@ function MaterialSearchSelect({ businessId, value, onChange, placeholder = "Sear
                 className="w-full text-left p-md font-body-sm text-body-sm text-on-surface hover:bg-surface-container-high border-b border-outline-variant last:border-b-0 flex items-center justify-between gap-md"
               >
                 <span className="truncate font-bold">{m.name || "Untitled material"}</span>
-                <span className="text-on-surface-variant uppercase shrink-0">
-                  {m.type}
-                  {m.unit ? ` · ${m.unit}` : ""}
-                </span>
               </button>
             ))}
         </div>

@@ -1,17 +1,14 @@
 import React, { useState } from "react";
-import { createSale } from "../../api/sales.api";
-import { SALE_STATUS_OPTIONS } from "../../constants/saleOptions";
-import MaterialSearchSelect from "../materials/MaterialSearchSelect";
+import { updateStock } from "../../api/stock.api";
 
-// Modal for recording a sale. The material is chosen via search but only its
-// id is submitted. Fields: material, quantity, total, status, remarks.
-function RecordSaleModal({ businessId, onClose, onSaved, onUnauthorized }) {
-  const [material, setMaterial] = useState(null); // { id, name }
+// Modal for editing a stock batch's quantity and mfg_price.
+// Only available within 24 hours of creation.
+function EditStockModal({ stock, businessId, onClose, onSaved, onUnauthorized }) {
+  const materialName = stock.material_name || stock.material?.name || "Untitled material";
+
   const [form, setForm] = useState({
-    qty_used: "",
-    total_amount: "",
-    status: SALE_STATUS_OPTIONS[0].value,
-    remarks: "",
+    quantity: String(stock.quantity ?? ""),
+    mfg_price: String(stock.mfg_price ?? ""),
   });
   const [fieldError, setFieldError] = useState("");
   const [error, setError] = useState(null);
@@ -26,32 +23,22 @@ function RecordSaleModal({ businessId, onClose, onSaved, onUnauthorized }) {
     e.preventDefault();
     setError(null);
 
-    if (!material) {
-      setFieldError("Select a material.");
-      return;
-    }
-    const qty = Number(form.qty_used);
-    if (!form.qty_used || Number.isNaN(qty) || qty <= 0) {
+    const quantity = Number(form.quantity);
+    if (!form.quantity || Number.isNaN(quantity) || quantity <= 0) {
       setFieldError("Enter a quantity greater than 0.");
       return;
     }
-    const total = Number(form.total_amount);
-    if (form.total_amount === "" || Number.isNaN(total) || total < 0) {
-      setFieldError("Enter a valid total amount.");
+    const mfgPrice = Number(form.mfg_price);
+    if (form.mfg_price === "" || Number.isNaN(mfgPrice) || mfgPrice < 0) {
+      setFieldError("Enter a valid manufacturing price.");
       return;
     }
     setFieldError("");
 
     setSubmitting(true);
     try {
-      const data = await createSale(businessId, {
-        materialId: material.id,
-        qty_used: qty,
-        total_amount: total,
-        status: form.status,
-        remarks: form.remarks.trim() || undefined,
-      });
-      onSaved(data.sale);
+      const data = await updateStock(businessId, stock.id, { quantity, mfg_price: mfgPrice });
+      onSaved(data.stock);
     } catch (err) {
       if (err && err.status === 401) return onUnauthorized();
       setError(err);
@@ -67,13 +54,15 @@ function RecordSaleModal({ businessId, onClose, onSaved, onUnauthorized }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/40 p-md" onClick={onClose}>
       <div
-        className="w-full max-w-lg bg-surface-container-lowest border-2 border-primary p-xl flex flex-col gap-lg max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-md bg-surface-container-lowest border-2 border-primary p-xl flex flex-col gap-lg"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between">
           <div className="flex flex-col gap-xs">
-            <h2 className="font-headline-lg text-headline-md text-on-surface uppercase tracking-tight">Record Sale</h2>
-            <p className="font-body-sm text-body-sm text-on-surface-variant">Log material usage and its charge.</p>
+            <h2 className="font-headline-lg text-headline-md text-on-surface uppercase tracking-tight">Edit Stock</h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              Update batch for <span className="font-bold text-on-surface">{materialName}</span>.
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -86,54 +75,37 @@ function RecordSaleModal({ businessId, onClose, onSaved, onUnauthorized }) {
         </div>
 
         <form className="flex flex-col gap-md" onSubmit={handleSubmit} noValidate>
-          <div className="flex flex-col gap-xs">
-            <label className={labelClass}>
-              Material <span className="text-error">*</span>
-            </label>
-            <MaterialSearchSelect businessId={businessId} value={material} onChange={setMaterial} />
-          </div>
-
-
           <div className="grid grid-cols-2 gap-md">
             <div className="flex flex-col gap-xs">
-              <label className={labelClass} htmlFor="qty_used">
+              <label className={labelClass} htmlFor="quantity">
                 Quantity <span className="text-error">*</span>
               </label>
-              <input className={fieldClass} id="qty_used" type="number" min="0" step="any" placeholder="0" value={form.qty_used} onChange={handleChange} />
+              <input
+                className={fieldClass}
+                id="quantity"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="0"
+                value={form.quantity}
+                onChange={handleChange}
+              />
             </div>
             <div className="flex flex-col gap-xs">
-              <label className={labelClass} htmlFor="total_amount">
-                Total (₱) <span className="text-error">*</span>
+              <label className={labelClass} htmlFor="mfg_price">
+                Mfg Price (₱) <span className="text-error">*</span>
               </label>
-              <input className={fieldClass} id="total_amount" type="number" min="0" step="any" placeholder="0.00" value={form.total_amount} onChange={handleChange} />
+              <input
+                className={fieldClass}
+                id="mfg_price"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="0.00"
+                value={form.mfg_price}
+                onChange={handleChange}
+              />
             </div>
-          </div>
-
-          <div className="flex flex-col gap-xs">
-            <label className={labelClass} htmlFor="status">
-              Status
-            </label>
-            <select className={fieldClass} id="status" value={form.status} onChange={handleChange}>
-              {SALE_STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-xs">
-            <label className={labelClass} htmlFor="remarks">
-              Remarks
-            </label>
-            <textarea
-              className={`${fieldClass} resize-none`}
-              id="remarks"
-              rows={4}
-              placeholder="Optional notes about this sale..."
-              value={form.remarks}
-              onChange={handleChange}
-            />
           </div>
 
           {fieldError && <span className="font-body-sm text-body-sm text-error">{fieldError}</span>}
@@ -160,12 +132,12 @@ function RecordSaleModal({ businessId, onClose, onSaved, onUnauthorized }) {
               {submitting ? (
                 <>
                   <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span>
-                  Recording...
+                  Saving...
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-[18px]">add</span>
-                  Record Sale
+                  <span className="material-symbols-outlined text-[18px]">check</span>
+                  Save Changes
                 </>
               )}
             </button>
@@ -176,4 +148,4 @@ function RecordSaleModal({ businessId, onClose, onSaved, onUnauthorized }) {
   );
 }
 
-export default RecordSaleModal;
+export default EditStockModal;

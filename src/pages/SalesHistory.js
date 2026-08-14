@@ -243,9 +243,11 @@ function SalesHistory() {
                 sales.map((sale) => {
                   const materialName = sale.material_name || sale.material?.name || "Untitled material";
                   const saleStatus = String(sale.status || "").toUpperCase();
-                  const isPaid = saleStatus === "PAID";
-                  const isScrap = saleStatus === "SCRAP";
                   const isPending = saleStatus === "PENDING";
+                  const createdAt = sale.created_at || sale.createdAt;
+                  const isOlderThanOneDay = createdAt
+                    ? Date.now() - new Date(createdAt).getTime() > 24 * 60 * 60 * 1000
+                    : false;
                   const createdBy = sale.created_by_name || sale.createdByName || "—";
                   return (
                     <tr key={sale.id} className="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
@@ -262,7 +264,7 @@ function SalesHistory() {
                       <td className="p-md font-mono text-on-surface-variant">{formatDate(sale.created_at || sale.createdAt)}</td>
                       <td className="p-md text-right">
                         <div className="flex items-center justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                          {!isPaid && !isScrap && (
+                          {isPending && (
                             <button
                               onClick={() => setModal({ type: "paid", sale })}
                               disabled={!can("update_sales")}
@@ -284,9 +286,15 @@ function SalesHistory() {
                           )}
                           <button
                             onClick={() => setModal({ type: "delete", sale })}
-                            disabled={!can("delete_sales")}
+                            disabled={!can("delete_sales") || isOlderThanOneDay}
                             className="w-7 h-7 flex items-center justify-center border border-outline-variant hover:border-error hover:text-error transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-outline-variant disabled:hover:text-inherit"
-                            title={can("delete_sales") ? "Delete" : "You don't have permission to delete sales"}
+                            title={
+                              !can("delete_sales")
+                                ? "You don't have permission to delete sales"
+                                : isOlderThanOneDay
+                                ? "Cannot delete sales older than 1 day"
+                                : "Delete"
+                            }
                           >
                             <span className="material-symbols-outlined text-[16px]">delete</span>
                           </button>

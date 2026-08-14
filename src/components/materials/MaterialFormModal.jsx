@@ -1,15 +1,12 @@
 import React, { useState } from "react";
 import { createMaterial, updateMaterial } from "../../api/material.api";
-import { MATERIAL_TYPE_OPTIONS, MATERIAL_UNIT_OPTIONS } from "../../constants/materialOptions";
 
-// Modal for creating or editing a material's core fields: name, type, unit.
+// Modal for creating or editing a material's core fields: name.
 // mode: "create" (needs businessId) | "edit" (needs material).
 function MaterialFormModal({ mode, businessId, material, onClose, onSaved, onUnauthorized }) {
   const isEdit = mode === "edit";
   const [form, setForm] = useState({
     name: material?.name || "",
-    type: material?.type || MATERIAL_TYPE_OPTIONS[0].value,
-    unit: material?.unit || MATERIAL_UNIT_OPTIONS[0],
   });
   const [fieldError, setFieldError] = useState("");
   const [error, setError] = useState(null);
@@ -30,7 +27,7 @@ function MaterialFormModal({ mode, businessId, material, onClose, onSaved, onUna
     }
     setFieldError("");
 
-    const payload = { name: form.name.trim(), type: form.type, unit: form.unit };
+    const payload = { name: form.name.trim() };
 
     setSubmitting(true);
     try {
@@ -82,33 +79,6 @@ function MaterialFormModal({ mode, businessId, material, onClose, onSaved, onUna
             </label>
             <input className={fieldClass} id="name" type="text" placeholder="Premium Matte Canvas Roll" value={form.name} onChange={handleChange} />
             {fieldError && <span className="font-body-sm text-body-sm text-error">{fieldError}</span>}
-          </div>
-
-          <div className="grid grid-cols-2 gap-md">
-            <div className="flex flex-col gap-xs">
-              <label className={labelClass} htmlFor="type">
-                Type
-              </label>
-              <select className={fieldClass} id="type" value={form.type} onChange={handleChange}>
-                {MATERIAL_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-xs">
-              <label className={labelClass} htmlFor="unit">
-                Unit
-              </label>
-              <select className={fieldClass} id="unit" value={form.unit} onChange={handleChange}>
-                {MATERIAL_UNIT_OPTIONS.map((unit) => (
-                  <option key={unit} value={unit}>
-                    {unit}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
 
           {error && (

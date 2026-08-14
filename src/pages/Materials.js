@@ -6,20 +6,13 @@ import { usePermissions } from "../hooks/usePermissions";
 import { clearMaterialSearchCache } from "../hooks/useMaterialSearch";
 import MaterialFormModal from "../components/materials/MaterialFormModal";
 import AddStockModal from "../components/materials/AddStockModal";
-import DeleteMaterialDialog from "../components/materials/DeleteMaterialDialog";
+import AddRejectModal from "../components/materials/AddRejectModal";
 
 // Backend sends status as "AVAILABLE" | "CONSUMED"; derive as a fallback.
 function resolveStatus(material) {
   if (material.status) return String(material.status).toUpperCase();
   const qty = Number(material.quantity) || 0;
   return qty > 0 ? "AVAILABLE" : "CONSUMED";
-}
-
-function formatPrice(value) {
-  if (value === null || value === undefined || value === "") return "—";
-  const num = Number(value);
-  if (Number.isNaN(num)) return "—";
-  return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatDate(value) {
@@ -231,10 +224,7 @@ function Materials() {
             <thead>
               <tr className="bg-surface-container-low border-b border-outline">
                 <th className="py-md px-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest w-1/4">Name</th>
-                <th className="py-md px-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Type</th>
-                <th className="py-md px-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Unit</th>
                 <th className="py-md px-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-right">Quantity</th>
-                <th className="py-md px-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-right">Mfg Price (₱)</th>
                 <th className="py-md px-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Status</th>
                 <th className="py-md px-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Last Stocked</th>
                 <th className="py-md px-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-right">Actions</th>
@@ -256,13 +246,8 @@ function Materials() {
                         </span>
                       </div>
                     </td>
-                    <td className={`py-md px-md font-body-sm text-body-sm text-on-surface ${consumed ? "opacity-50" : ""}`}>{m.type || "—"}</td>
-                    <td className={`py-md px-md font-body-sm text-body-sm text-on-surface ${consumed ? "opacity-50" : ""}`}>{m.unit || "—"}</td>
                     <td className={`py-md px-md font-body-md text-body-md font-bold text-right text-on-surface ${consumed ? "opacity-50" : ""}`}>
                       {m.quantity ?? 0}
-                    </td>
-                    <td className={`py-md px-md font-body-md text-body-md text-on-surface font-mono text-right ${consumed ? "opacity-50" : ""}`}>
-                      {formatPrice(m.mfg_price)}
                     </td>
                     <td className="py-md px-md">
                       <StatusBadge status={m._status} unstocked={unstocked} />
@@ -281,20 +266,20 @@ function Materials() {
                           <span className="material-symbols-outlined text-[18px]">add_box</span>
                         </button>
                         <button
+                          onClick={() => setModal({ type: "reject", material: m })}
+                          disabled={!can("create_sales")}
+                          className="p-xs hover:bg-error-container hover:text-error transition-colors text-on-surface-variant disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
+                          title={can("create_sales") ? "Add Reject" : "You don't have permission to record sales"}
+                        >
+                          <span className="material-symbols-outlined text-[18px]">remove_circle</span>
+                        </button>
+                        <button
                           onClick={() => setModal({ type: "edit", material: m })}
                           disabled={!can("update_material")}
                           className="p-xs hover:bg-surface-container-highest transition-colors text-on-surface-variant disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                           title={can("update_material") ? "Edit" : "You don't have permission to edit materials"}
                         >
                           <span className="material-symbols-outlined text-[18px]">edit</span>
-                        </button>
-                        <button
-                          onClick={() => setModal({ type: "delete", material: m })}
-                          disabled={!can("delete_material")}
-                          className="p-xs hover:bg-error-container hover:text-error transition-colors text-on-surface-variant disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-on-surface-variant"
-                          title={can("delete_material") ? "Delete" : "You don't have permission to delete materials"}
-                        >
-                          <span className="material-symbols-outlined text-[18px]">delete</span>
                         </button>
                       </div>
                     </td>
@@ -341,11 +326,12 @@ function Materials() {
           onUnauthorized={goToLogin}
         />
       )}
-      {modal?.type === "delete" && (
-        <DeleteMaterialDialog
+      {modal?.type === "reject" && (
+        <AddRejectModal
           material={modal.material}
+          businessId={businessId}
           onClose={() => setModal(null)}
-          onDeleted={handleMutated}
+          onSaved={handleMutated}
           onUnauthorized={goToLogin}
         />
       )}

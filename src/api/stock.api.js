@@ -27,3 +27,20 @@ export function getStockHistory(businessId, stockId, params = {}, opts = {}) {
   const query = qs.toString();
   return apiRequest(`/api/businesses/${businessId}/stocks/${stockId}/history${query ? `?${query}` : ""}`, opts);
 }
+
+// Updates quantity and/or mfg_price on a stock batch.
+// Disabled after 24 h — backend returns 403.
+export function updateStock(businessId, stockId, payload) {
+  return apiRequest(`/api/businesses/${businessId}/stocks/${stockId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+// Soft-deletes a stock batch.
+// Disabled after 24 h — backend returns 403.
+export function deleteStock(businessId, stockId) {
+  return apiRequest(`/api/businesses/${businessId}/stocks/${stockId}`, {
+    method: "DELETE",
+  });
+}

@@ -2,6 +2,4 @@
 export const SALE_STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
   { value: "PAID", label: "Paid" },
-  { value: "SCRAP", label: "Scrap"},
-  { value: "ABANDONED", label: "Abandoned" }
 ];

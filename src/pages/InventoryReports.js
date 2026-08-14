@@ -57,10 +57,6 @@ function InventoryReports() {
   const C = 2 * Math.PI * R;
   const availableDash = (availablePct / 100) * C;
 
-  const valueTrend = Number(kpis.inventoryValueTrendPct);
-  const hasTrend = !Number.isNaN(valueTrend);
-  const trendUp = valueTrend >= 0;
-
   // No workspace chosen yet.
   if (!businessId) {
     return (
@@ -132,24 +128,8 @@ function InventoryReports() {
         <>
           {/* KPI Cards */}
           <div className="grid grid-cols-12 gap-lg">
-            {/* Inventory value (inverted highlight) */}
-            <div className="col-span-12 sm:col-span-6 lg:col-span-3 border border-primary bg-primary text-on-primary p-md sm:p-lg flex flex-col justify-between group transition-all hover:bg-surface-bright hover:text-primary hover:border-primary min-h-[140px] sm:min-h-[160px]">
-              <span className="font-label-md uppercase tracking-widest border-b border-on-primary/30 pb-xs group-hover:border-primary/30">
-                Inventory Value On Hand
-              </span>
-              <div className="mt-lg">
-                <span className="font-display-lg text-display-lg block tabular-nums">{peso(kpis.inventoryValue)}</span>
-                {hasTrend && (
-                  <div className="flex items-center gap-xs mt-sm text-surface-container-lowest group-hover:text-on-surface-variant">
-                    <span className="material-symbols-outlined text-[16px]">{trendUp ? "arrow_upward" : "arrow_downward"}</span>
-                    <span className="font-body-sm">{Math.abs(valueTrend)}% vs last period</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Units on hand */}
-            <div className="col-span-12 sm:col-span-6 lg:col-span-3 border border-primary bg-surface-bright p-lg flex flex-col justify-between group transition-all hover:bg-surface-container min-h-[160px]">
+            <div className="col-span-12 sm:col-span-6 lg:col-span-4 border border-primary bg-surface-bright p-lg flex flex-col justify-between group transition-all hover:bg-surface-container min-h-[160px]">
               <span className="font-label-md text-on-surface-variant uppercase tracking-widest border-b border-primary/30 pb-xs group-hover:text-primary">
                 Total Units On Hand
               </span>
@@ -160,7 +140,7 @@ function InventoryReports() {
             </div>
 
             {/* Active materials */}
-            <div className="col-span-12 sm:col-span-6 lg:col-span-3 border border-primary bg-surface-bright p-lg flex flex-col justify-between group transition-all hover:bg-surface-container min-h-[160px]">
+            <div className="col-span-12 sm:col-span-6 lg:col-span-4 border border-primary bg-surface-bright p-lg flex flex-col justify-between group transition-all hover:bg-surface-container min-h-[160px]">
               <span className="font-label-md text-on-surface-variant uppercase tracking-widest border-b border-primary/30 pb-xs group-hover:text-primary">
                 Active Materials
               </span>
@@ -171,7 +151,7 @@ function InventoryReports() {
             </div>
 
             {/* Low / out of stock */}
-            <div className="col-span-12 sm:col-span-6 lg:col-span-3 border border-primary bg-surface-bright p-lg flex flex-col justify-between group transition-all hover:bg-surface-container min-h-[160px]">
+            <div className="col-span-12 sm:col-span-6 lg:col-span-4 border border-primary bg-surface-bright p-lg flex flex-col justify-between group transition-all hover:bg-surface-container min-h-[160px]">
               <span className="font-label-md text-on-surface-variant uppercase tracking-widest border-b border-primary/30 pb-xs group-hover:text-primary">
                 Low / Out Of Stock
               </span>

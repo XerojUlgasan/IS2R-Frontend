@@ -1,6 +1,7 @@
-import React from "react";
-import { NavLink, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useActiveBusiness } from "../context/ActiveBusinessContext";
+import { getCurrentUser } from "../api/user.api";
 
 // Navigation groups mirror the original design's sidebar structure exactly.
 const NAV_GROUPS = [
@@ -44,8 +45,18 @@ const ACTIVE_CLASSES = "bg-primary text-on-primary";
 const INACTIVE_CLASSES = "hover:bg-surface-container-highest";
 
 function Sidebar({ isOpen = true, onClose }) {
+  const navigate = useNavigate();
   const { activeBusiness } = useActiveBusiness();
   const businessName = activeBusiness?.name || "No workspace selected";
+  const role = activeBusiness?.role || "";
+
+  const [fullName, setFullName] = useState("");
+
+  useEffect(() => {
+    getCurrentUser()
+      .then((u) => setFullName(u.user_metadata?.full_name || u.email || ""))
+      .catch(() => {});
+  }, []);
 
   return (
     <aside
@@ -114,12 +125,17 @@ function Sidebar({ isOpen = true, onClose }) {
       </nav>
       <div className="mt-auto border-t border-outline-variant bg-surface-container-low p-lg">
         <div className="flex items-center gap-md">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
+          <button
+            type="button"
+            title="Personal settings"
+            onClick={() => { navigate("/personal-settings"); onClose?.(); }}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary hover:opacity-80 transition-opacity"
+          >
             <span className="material-symbols-outlined text-[18px] text-on-primary">person</span>
-          </div>
+          </button>
           <div className="flex-1 overflow-hidden">
-            <p className="truncate font-body-sm font-bold text-on-surface">Alex Miller</p>
-            <p className="truncate font-label-md text-on-surface-variant">Admin</p>
+            <p className="truncate font-body-sm font-bold text-on-surface">{fullName || "—"}</p>
+            <p className="truncate font-label-md text-on-surface-variant capitalize">{role || "—"}</p>
           </div>
           <Link to="/login" title="Log out" onClick={onClose}>
             <span className="material-symbols-outlined text-on-surface-variant">logout</span>

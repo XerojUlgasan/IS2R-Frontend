@@ -19,6 +19,7 @@ import InventoryReports from "./pages/InventoryReports";
 import Members from "./pages/Members";
 import AuditLogs from "./pages/AuditLogs";
 import BusinessSettings from "./pages/BusinessSettings";
+import PersonalSettings from "./pages/PersonalSettings";
 import ComingSoon from "./pages/ComingSoon";
 import Calendar from "./pages/Calendar";
 
@@ -44,6 +45,7 @@ function App() {
           <Route path="/members" element={<Members />} />
           <Route path="/audit-logs" element={<AuditLogs />} />
           <Route path="/business-settings" element={<BusinessSettings />} />
+          <Route path="/personal-settings" element={<PersonalSettings />} />
           <Route path="/expenses" element={<Expenses />} />
           <Route path="/pending-payments" element={<ComingSoon title="Pending Payments" />} />
           <Route path="/inventory-reports" element={<InventoryReports />} />

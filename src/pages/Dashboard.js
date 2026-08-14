@@ -8,11 +8,6 @@ function peso(value) {
   return `₱${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function pesoCompact(value) {
-  const num = Number(value) || 0;
-  return `₱${new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(num)}`;
-}
-
 function formatDateTime(value) {
   if (!value) return "—";
   const d = new Date(value);
@@ -216,8 +211,8 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Pending Payments & Inventory Value */}
-        <div className="col-span-1 md:col-span-4 flex flex-col gap-md">
+          {/* Pending Payments & Fully Consumed */}
+          <div className="col-span-1 md:col-span-4 flex flex-col gap-md">
           {/* Pending Payments → Sales History filtered to pending */}
           <button
             onClick={() => navigate("/sales-history?status=PENDING")}
@@ -234,17 +229,6 @@ function Dashboard() {
               <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
             </div>
           </button>
-
-          {/* Current Inventory Value */}
-          <div className="flex-1 bg-surface-container-low border border-outline-variant p-lg flex flex-col justify-between">
-            <div className="flex justify-between items-center">
-              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Est. Inventory Value</span>
-              <span className="material-symbols-outlined text-on-surface-variant">inventory_2</span>
-            </div>
-            <div className="mt-md">
-              <span className="font-headline-lg text-headline-lg text-primary tabular-nums">{loading ? "…" : pesoCompact(s.inventoryValue)}</span>
-            </div>
-          </div>
 
           {/* Fully Consumed Materials */}
           <div className="bg-surface-container-lowest border border-outline-variant p-lg flex justify-between items-center group hover:bg-primary hover:text-on-primary transition-colors duration-300">
@@ -276,11 +260,10 @@ function Dashboard() {
                   </div>
                   <div className="flex flex-col">
                     <span className="font-body-md text-body-md font-bold">{item.name || "Untitled material"}</span>
-                    {item.unit && <span className="font-body-sm text-body-sm text-on-surface-variant">Unit: {item.unit}</span>}
                   </div>
                 </div>
                 <span className="font-label-md text-label-md text-error tabular-nums">
-                  {(Number(item.remaining) || 0).toLocaleString()} {item.unit || ""}
+                  {(Number(item.remaining) || 0).toLocaleString()}
                 </span>
               </div>
             ))}

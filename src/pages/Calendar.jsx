@@ -302,7 +302,7 @@ function DetailPanel({ detail, loading, selectedDate, type, onExport }) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-md p-lg text-center">
         <span className="material-symbols-outlined text-[48px] text-on-surface-variant/40">touch_app</span>
-        <span className="font-body-md text-on-surface-variant">Click a {type === "day" ? "day" : "month"} to see material-level details.</span>
+        <span className="font-body-md text-on-surface-variant">Click a {type === "day" ? "day" : "month"} to see details.</span>
       </div>
     );
   }
@@ -314,8 +314,6 @@ function DetailPanel({ detail, loading, selectedDate, type, onExport }) {
       </div>
     );
   }
-
-  const materials = detail?.materials || [];
 
   return (
     <div className="flex flex-col flex-1">
@@ -339,31 +337,9 @@ function DetailPanel({ detail, loading, selectedDate, type, onExport }) {
       <div className="p-lg grid grid-cols-2 gap-md border-b border-outline-variant">
         <Stat label="Sales Amount" value={peso(detail?.totalSalesAmount)} />
         <Stat label="Sales Count" value={detail?.totalSalesCount ?? 0} />
-        <Stat label="Stock Added" value={detail?.totalStockAdded ?? 0} />
-        <Stat label="Consumed" value={detail?.totalConsumed ?? 0} />
+        <Stat label="Expenses" value={peso(detail?.totalExpenses)} />
         <Stat label="Deleted Sales" value={detail?.deletedSalesCount ?? 0} error />
         <Stat label="Deleted Stocks" value={detail?.deletedStocksCount ?? 0} error />
-      </div>
-
-      {/* Material table */}
-      <div className="flex-1 overflow-y-auto">
-        {materials.length === 0 && (
-          <div className="p-lg text-center text-on-surface-variant font-body-sm">No activity for this period.</div>
-        )}
-        {materials.map((m, i) => (
-          <div key={m.id || i} className="p-md border-b border-outline-variant last:border-b-0 flex flex-col gap-xs">
-            <div className="flex items-center justify-between">
-              <span className="font-body-md font-bold text-on-surface">{m.name || "Untitled"}</span>
-              <span className="font-label-md text-label-md text-on-surface-variant">{m.unit || ""}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-xs text-[11px] font-label-md text-on-surface-variant">
-              <span>Stock +{m.stockAdded ?? 0}</span>
-              <span>Consumed: {m.consumed ?? 0}</span>
-              <span>Sales: {m.salesCount ?? 0} ({peso(m.salesAmount)})</span>
-              <span className="text-error">Del: {m.deletedSales ?? 0}S / {m.deletedStocks ?? 0}St</span>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );

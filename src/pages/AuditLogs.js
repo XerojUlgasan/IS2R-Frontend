@@ -4,6 +4,7 @@ import { useActiveBusiness } from "../context/ActiveBusinessContext";
 import { useAuditLogs, AUDIT_PAGE_SIZE } from "../hooks/useAuditLogs";
 import { actionLabel, actionBadgeClass } from "../constants/auditActions";
 import AuditFiltersModal from "../components/audit/AuditFiltersModal";
+import AuditDiffModal from "../components/audit/AuditDiffModal";
 
 const EMPTY_FILTERS = { action: "", dateFrom: "", dateTo: "", search: "" };
 
@@ -32,6 +33,7 @@ function AuditLogs() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [searchInput, setSearchInput] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [diffLog, setDiffLog] = useState(null);
 
   const { logs, total, totalPages, loading, error, refetch } = useAuditLogs(businessId, page, filters);
 
@@ -162,7 +164,8 @@ function AuditLogs() {
           <div className="col-span-3 font-label-md text-label-md text-primary uppercase tracking-tighter">Action / Type</div>
           <div className="col-span-5 font-label-md text-label-md text-primary uppercase tracking-tighter">Description</div>
           <div className="col-span-2 font-label-md text-label-md text-primary uppercase tracking-tighter">Actor</div>
-          <div className="col-span-2 font-label-md text-label-md text-primary uppercase tracking-tighter text-right">Timestamp</div>
+          <div className="col-span-1 font-label-md text-label-md text-primary uppercase tracking-tighter text-right">Timestamp</div>
+          <div className="col-span-1" />
         </div>
 
         <div className="flex-1 overflow-y-auto bg-surface-bright flex flex-col divide-y divide-primary">
@@ -208,8 +211,19 @@ function AuditLogs() {
                 <div className="col-span-2">
                   <p className="font-body-sm text-body-sm text-primary">{actorName(log)}</p>
                 </div>
-                <div className="col-span-2 text-right">
+                <div className="col-span-1 text-right">
                   <p className="font-body-sm text-body-sm text-primary font-mono">{formatTimestamp(log.created_at || log.createdAt)}</p>
+                </div>
+                <div className="col-span-1 flex justify-end">
+                  {(log.previous_object || log.new_object) && (
+                    <button
+                      onClick={() => setDiffLog(log)}
+                      title="Compare changes"
+                      className="flex items-center gap-xs px-xs py-xs border border-primary text-primary hover:bg-surface-container transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">difference</span>
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -242,6 +256,7 @@ function AuditLogs() {
       </div>
 
       {showFilters && <AuditFiltersModal initial={filters} onClose={() => setShowFilters(false)} onApply={applyFilters} />}
+      {diffLog && <AuditDiffModal log={diffLog} onClose={() => setDiffLog(null)} />}
     </div>
   );
 }
