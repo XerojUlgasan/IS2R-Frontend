@@ -329,7 +329,7 @@ function Dashboard() {
                 {loading ? "…" : cutRaw !== null ? peso(cutRaw) : "—"}
               </span>
               <div className="w-full h-px bg-on-primary/20 my-sm"></div>
-              <span className="font-label-md text-label-md text-on-primary/70 uppercase tracking-widest">
+              {/* <span className="font-label-md text-label-md text-on-primary/70 uppercase tracking-widest">
                 After expenses
               </span>
               <span className="font-headline-md text-headline-md font-bold tabular-nums">
@@ -338,7 +338,7 @@ function Dashboard() {
                   : cutAfterExpenses !== null
                     ? peso(cutAfterExpenses)
                     : "—"}
-              </span>
+              </span> */}
             </div>
           </div>
         )}

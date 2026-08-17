@@ -5,7 +5,7 @@ import { readCache, writeCache, isSameData } from "./cache";
 
 // CRA only exposes REACT_APP_* vars; REACT_API_BASE_URL is kept in .env for
 // reference but read here under the CRA-compatible name.
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000";
+const BASE_URL = (process.env.REACT_APP_API_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
 
 // Builds the auth header from the active Supabase session's JWT.
 async function getAuthHeaders() {
