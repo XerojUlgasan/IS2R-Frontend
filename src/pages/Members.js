@@ -2,10 +2,11 @@ import React, { useState, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useActiveBusiness } from "../context/ActiveBusinessContext";
 import { useMembers } from "../hooks/useMembers";
-import { inviteMember, updateMemberPermissions, removeMember } from "../api/member.api";
+import { inviteMember, updateMemberPermissions, removeMember, updateShareholderCut } from "../api/member.api";
 import { supabase } from "../lib/supabaseClient";
 import RemoveMemberModal from "../components/members/RemoveMemberModal";
 import ConfigureActionsModal from "../components/members/ConfigureActionsModal";
+import ConfigureShareholderModal from "../components/members/ConfigureShareholderModal";
 import InviteUserModal from "../components/members/InviteUserModal";
 
 // Role badge styling: Owner is high-contrast, others use outline variants.
@@ -108,6 +109,18 @@ function Members() {
   const handleSavePermissions = async (member, permissions) => {
     try {
       await updateMemberPermissions(businessId, member.id, permissions);
+      setConfigureTarget(null);
+      refetch();
+    } catch (err) {
+      if (err && err.status === 401) return goToLogin();
+      throw err;
+    }
+  };
+
+  // Persist a shareholder/owner cut, then refresh.
+  const handleSaveCut = async (member, percentage) => {
+    try {
+      await updateShareholderCut(businessId, member.id, percentage);
       setConfigureTarget(null);
       refetch();
     } catch (err) {
@@ -312,11 +325,11 @@ function Members() {
                       <td className="px-lg py-md font-body-sm text-body-sm text-on-surface-variant">{formatDate(member.acceptedAt)}</td>
                       <td className="px-lg py-md text-right">
                         <div className="flex justify-end gap-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                          {isOwner && member.userId !== currentUserId && (
+                          {isOwner && (member.userId !== currentUserId || member.role === "Owner") && (
                             <button
                               onClick={() => setConfigureTarget(member)}
                               className="p-1 hover:bg-surface-variant text-on-surface-variant hover:text-primary transition-colors"
-                              title="Configure allowed actions"
+                              title={member.role === "Owner" || member.role === "Shareholder" ? "Configure cut" : "Configure allowed actions"}
                             >
                               <span className="material-symbols-outlined text-[20px]">manage_accounts</span>
                             </button>
@@ -354,7 +367,15 @@ function Members() {
       {removeTarget && (
         <RemoveMemberModal member={{ ...removeTarget, name: displayName(removeTarget) }} onClose={() => setRemoveTarget(null)} onConfirm={handleRemove} />
       )}
-      {configureTarget && (
+      {configureTarget && (configureTarget.role === "Shareholder" || configureTarget.role === "Owner") && (
+        <ConfigureShareholderModal
+          member={{ ...configureTarget, name: displayName(configureTarget) }}
+          members={members}
+          onClose={() => setConfigureTarget(null)}
+          onSave={handleSaveCut}
+        />
+      )}
+      {configureTarget && configureTarget.role === "Staff" && (
         <ConfigureActionsModal
           member={{ ...configureTarget, name: displayName(configureTarget) }}
           onClose={() => setConfigureTarget(null)}

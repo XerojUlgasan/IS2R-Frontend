@@ -12,7 +12,12 @@ function formatDateTime(value) {
   if (!value) return "—";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString(undefined, { month: "short", day: "2-digit", hour: "numeric", minute: "2-digit" });
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "2-digit",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 // Compact "x mins ago" style relative time for the activity feed.
@@ -33,15 +38,31 @@ function relativeTime(value) {
 function SaleStatusBadge({ status }) {
   const s = String(status || "").toUpperCase();
   if (s === "PAID") {
-    return <span className="inline-block px-sm py-xs bg-primary text-on-primary font-label-md text-[10px] uppercase tracking-widest">Paid</span>;
+    return (
+      <span className="inline-block px-sm py-xs bg-primary text-on-primary font-label-md text-[10px] uppercase tracking-widest">
+        Paid
+      </span>
+    );
   }
   if (s === "ABANDONED") {
-    return <span className="inline-block px-sm py-xs border border-error text-error font-label-md text-[10px] uppercase tracking-widest">Abandoned</span>;
+    return (
+      <span className="inline-block px-sm py-xs border border-error text-error font-label-md text-[10px] uppercase tracking-widest">
+        Abandoned
+      </span>
+    );
   }
   if (s === "SCRAP") {
-    return <span className="inline-block px-sm py-xs border border-outline text-on-surface-variant font-label-md text-[10px] uppercase tracking-widest">Scrap</span>;
+    return (
+      <span className="inline-block px-sm py-xs border border-outline text-on-surface-variant font-label-md text-[10px] uppercase tracking-widest">
+        Scrap
+      </span>
+    );
   }
-  return <span className="inline-block px-sm py-xs border border-primary text-primary font-label-md text-[10px] uppercase tracking-widest">Pending</span>;
+  return (
+    <span className="inline-block px-sm py-xs border border-primary text-primary font-label-md text-[10px] uppercase tracking-widest">
+      Pending
+    </span>
+  );
 }
 
 function actionIcon(action) {
@@ -57,8 +78,10 @@ function Dashboard() {
   const navigate = useNavigate();
   const { activeBusiness } = useActiveBusiness();
   const businessId = activeBusiness?.id;
+  const role = String(activeBusiness?.role || "").toUpperCase();
 
   const [revenuePeriod, setRevenuePeriod] = useState("monthly"); // "weekly" | "monthly"
+  const [cutPeriod, setCutPeriod] = useState("today"); // "today" | "weekly" | "monthly"
   // Single fetch now returns both periods; toggling is purely client-side.
   const { summary, loading, error, refetch } = useDashboard(businessId);
 
@@ -85,17 +108,34 @@ function Dashboard() {
   const periodWord = revenuePeriod === "weekly" ? "week" : "month";
   const periods = s.periods || {};
   const activePeriod = periods[revenuePeriod] || {};
-  const periodRevenue = activePeriod.revenue ?? s.periodRevenue ?? s.monthlyRevenue;
-  const periodExpenses = activePeriod.expenses ?? s.periodExpenses ?? s.monthlyExpenses;
-  const periodNet = activePeriod.net ?? s.periodNet ?? (Number(periodRevenue) || 0) - (Number(periodExpenses) || 0);
+  const periodRevenue =
+    activePeriod.revenue ?? s.periodRevenue ?? s.monthlyRevenue;
+  const periodExpenses =
+    activePeriod.expenses ?? s.periodExpenses ?? s.monthlyExpenses;
+  const periodNet =
+    activePeriod.net ??
+    s.periodNet ??
+    (Number(periodRevenue) || 0) - (Number(periodExpenses) || 0);
   const netNegative = Number(periodNet) < 0;
+
+  // myCut — null means staff or no cut set; hide the card entirely.
+  const myCut = s.myCut || null;
+  const showMyCut =
+    (role === "OWNER" || role === "SHAREHOLDER") && myCut !== null;
+  const activeCut = myCut?.[cutPeriod] || {};
+  const cutRaw = activeCut.raw ?? null;
+  const cutAfterExpenses = activeCut.afterExpenses ?? null;
 
   // No workspace chosen yet.
   if (!businessId) {
     return (
       <div className="flex flex-col items-center justify-center gap-md min-h-[60vh] text-center">
-        <span className="material-symbols-outlined text-[32px] text-primary">dashboard</span>
-        <h2 className="font-headline-md text-headline-md text-primary">No workspace selected</h2>
+        <span className="material-symbols-outlined text-[32px] text-primary">
+          dashboard
+        </span>
+        <h2 className="font-headline-md text-headline-md text-primary">
+          No workspace selected
+        </h2>
         <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
           Choose a business to view its dashboard.
         </p>
@@ -113,7 +153,9 @@ function Dashboard() {
     <div className="flex flex-col w-full min-h-full gap-lg">
       {/* Header */}
       <div className="flex flex-col gap-xs w-full mb-md">
-        <h1 className="font-display-lg text-display-lg text-on-surface uppercase">Owner Overview</h1>
+        <h1 className="font-display-lg text-display-lg text-on-surface uppercase">
+          Owner Overview
+        </h1>
         <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
           High-level snapshot of current financial and operational metrics.
         </p>
@@ -124,7 +166,9 @@ function Dashboard() {
         <div className="flex items-center justify-between gap-md border border-error bg-error-container p-md">
           <div className="flex items-center gap-sm text-on-error-container">
             <span className="material-symbols-outlined text-error">error</span>
-            <span className="font-body-md">{error.message || "Something went wrong, try again."}</span>
+            <span className="font-body-md">
+              {error.message || "Something went wrong, try again."}
+            </span>
           </div>
           <button
             onClick={refetch}
@@ -138,10 +182,16 @@ function Dashboard() {
       {/* Main Bento Grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-md w-full">
         {/* Today's Revenue (Large) */}
-        <div className="col-span-1 md:col-span-8 bg-surface border border-outline-variant p-lg flex flex-col justify-between min-h-[300px] relative group overflow-hidden">
+        <div
+          className={`col-span-1 ${showMyCut ? "md:col-span-4" : "md:col-span-8"} bg-surface border border-outline-variant p-lg flex flex-col justify-between min-h-[300px] relative group overflow-hidden`}
+        >
           <div className="flex justify-between items-start z-10 relative">
-            <span className="font-headline-md text-headline-md text-primary tracking-tight uppercase">Today's Revenue</span>
-            <span className="material-symbols-outlined text-primary text-[32px]">trending_up</span>
+            <span className="font-headline-md text-headline-md text-primary tracking-tight uppercase">
+              Today's Revenue
+            </span>
+            <span className="material-symbols-outlined text-primary text-[32px]">
+              trending_up
+            </span>
           </div>
           <div className="flex flex-col gap-xs z-10 relative mt-auto">
             <span className="font-display-lg text-[72px] leading-none font-extrabold text-primary tracking-tighter tabular-nums">
@@ -150,12 +200,16 @@ function Dashboard() {
             {hasTodayTrend && (
               <div className="flex items-center gap-sm">
                 <span className="px-sm py-xs bg-primary text-on-primary font-label-md text-label-md uppercase flex items-center gap-xs">
-                  <span className="material-symbols-outlined text-[14px]">{todayUp ? "arrow_upward" : "arrow_downward"}</span>
+                  <span className="material-symbols-outlined text-[14px]">
+                    {todayUp ? "arrow_upward" : "arrow_downward"}
+                  </span>
                   {Math.abs(todayTrend)}% vs Yesterday
                 </span>
               </div>
             )}
-            <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mt-xs">Since 12:00 AM today</span>
+            <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mt-xs">
+              Since 12:00 AM today
+            </span>
           </div>
           <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-surface-container-high rounded-full opacity-50 group-hover:scale-110 transition-transform duration-700 ease-out"></div>
         </div>
@@ -168,23 +222,33 @@ function Dashboard() {
             className="flex items-center justify-between gap-md bg-surface-container-lowest border border-outline-variant p-md group hover:border-primary transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-sm">
-              <span className="material-symbols-outlined text-primary text-[20px]">calendar_month</span>
-              <span className="font-label-md text-label-md uppercase tracking-widest text-on-surface group-hover:text-primary">Sales Calendar</span>
+              <span className="material-symbols-outlined text-primary text-[20px]">
+                calendar_month
+              </span>
+              <span className="font-label-md text-label-md uppercase tracking-widest text-on-surface group-hover:text-primary">
+                Sales Calendar
+              </span>
             </div>
-            <span className="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:translate-x-1 group-hover:text-primary transition-transform">arrow_forward</span>
+            <span className="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:translate-x-1 group-hover:text-primary transition-transform">
+              arrow_forward
+            </span>
           </button>
 
           {/* Period Revenue card */}
           <div className="flex-1 bg-primary text-on-primary border border-primary p-lg flex flex-col justify-between min-h-[260px]">
             <div className="flex justify-between items-start gap-sm">
-              <span className="font-headline-md text-headline-md tracking-tight uppercase">{periodLabel} Revenue</span>
+              <span className="font-headline-md text-headline-md tracking-tight uppercase">
+                {periodLabel} Revenue
+              </span>
               {/* Weekly / Monthly toggle */}
               <div className="flex border border-on-primary/40 shrink-0">
                 <button
                   type="button"
                   onClick={() => setRevenuePeriod("weekly")}
                   className={`px-sm py-xs font-label-md text-[10px] uppercase tracking-widest transition-colors ${
-                    revenuePeriod === "weekly" ? "bg-on-primary text-primary" : "text-on-primary hover:bg-on-primary/10"
+                    revenuePeriod === "weekly"
+                      ? "bg-on-primary text-primary"
+                      : "text-on-primary hover:bg-on-primary/10"
                   }`}
                 >
                   Weekly
@@ -193,7 +257,9 @@ function Dashboard() {
                   type="button"
                   onClick={() => setRevenuePeriod("monthly")}
                   className={`px-sm py-xs font-label-md text-[10px] uppercase tracking-widest transition-colors ${
-                    revenuePeriod === "monthly" ? "bg-on-primary text-primary" : "text-on-primary hover:bg-on-primary/10"
+                    revenuePeriod === "monthly"
+                      ? "bg-on-primary text-primary"
+                      : "text-on-primary hover:bg-on-primary/10"
                   }`}
                 >
                   Monthly
@@ -201,47 +267,129 @@ function Dashboard() {
               </div>
             </div>
             <div className="flex flex-col gap-xs mt-auto">
-              <span className="font-headline-lg text-headline-lg font-bold tabular-nums">{loading ? "…" : peso(periodRevenue)}</span>
+              <span className="font-headline-lg text-headline-lg font-bold tabular-nums">
+                {loading ? "…" : peso(periodRevenue)}
+              </span>
               <div className="w-full h-px bg-on-primary/20 my-sm"></div>
-              <span className="font-label-md text-label-md text-on-primary/70 uppercase tracking-widest">Net after expenses (this {periodWord})</span>
-              <span className={`font-headline-md text-headline-md font-bold tabular-nums ${netNegative ? "text-error" : "text-on-primary"}`}>
+              <span className="font-label-md text-label-md text-on-primary/70 uppercase tracking-widest">
+                Net after expenses (this {periodWord})
+              </span>
+              <span
+                className={`font-headline-md text-headline-md font-bold tabular-nums ${netNegative ? "text-error" : "text-on-primary"}`}
+              >
                 {loading ? "…" : peso(periodNet)}
               </span>
             </div>
           </div>
         </div>
 
-          {/* Pending Payments & Fully Consumed */}
-          <div className="col-span-1 md:col-span-4 flex flex-col gap-md">
+        {/* My Cut */}
+        {showMyCut && (
+          <div className="col-span-1 md:col-span-4 bg-primary text-on-primary border border-primary p-lg flex flex-col justify-between min-h-[300px]">
+            <div className="flex justify-between items-start gap-sm">
+              <span className="font-headline-md text-headline-md tracking-tight uppercase">
+                My Cut
+              </span>
+              <div className="flex border border-on-primary/40 shrink-0">
+                {["today", "weekly", "monthly"].map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setCutPeriod(p)}
+                    className={`px-sm py-xs font-label-md text-[10px] uppercase tracking-widest transition-colors ${
+                      cutPeriod === p
+                        ? "bg-on-primary text-primary"
+                        : "text-on-primary hover:bg-on-primary/10"
+                    }`}
+                  >
+                    {p === "today"
+                      ? "Today"
+                      : p === "weekly"
+                        ? "Week"
+                        : "Month"}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-xs mt-auto">
+              <div className="flex items-baseline gap-sm mb-sm">
+                <span className="font-display-lg text-[56px] leading-none font-extrabold tabular-nums tracking-tighter">
+                  {myCut?.cutPercentage != null
+                    ? `${myCut.cutPercentage}%`
+                    : "—"}
+                </span>
+                <span className="font-label-md text-label-md text-on-primary/70 uppercase tracking-widest">
+                  your share
+                </span>
+              </div>
+              <span className="font-label-md text-label-md text-on-primary/70 uppercase tracking-widest">
+                Raw cut
+              </span>
+              <span className="font-headline-lg text-headline-lg font-bold tabular-nums">
+                {loading ? "…" : cutRaw !== null ? peso(cutRaw) : "—"}
+              </span>
+              <div className="w-full h-px bg-on-primary/20 my-sm"></div>
+              <span className="font-label-md text-label-md text-on-primary/70 uppercase tracking-widest">
+                After expenses
+              </span>
+              <span className="font-headline-md text-headline-md font-bold tabular-nums">
+                {loading
+                  ? "…"
+                  : cutAfterExpenses !== null
+                    ? peso(cutAfterExpenses)
+                    : "—"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Pending Payments & Fully Consumed */}
+        <div className="col-span-1 md:col-span-4 flex flex-col gap-md">
           {/* Pending Payments → Sales History filtered to pending */}
           <button
             onClick={() => navigate("/sales-history?status=PENDING")}
             className="flex-1 text-left bg-surface-container-lowest border border-outline-variant p-lg flex flex-col justify-between group hover:border-primary transition-colors cursor-pointer"
           >
             <div className="flex justify-between items-center">
-              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Pending Payments</span>
+              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">
+                Pending Payments
+              </span>
               <div className="w-8 h-8 rounded-full bg-error flex items-center justify-center">
-                <span className="font-label-md text-label-md text-on-error tabular-nums">{loading ? "—" : Number(s.pendingPaymentsCount) || 0}</span>
+                <span className="font-label-md text-label-md text-on-error tabular-nums">
+                  {loading ? "—" : Number(s.pendingPaymentsCount) || 0}
+                </span>
               </div>
             </div>
             <div className="mt-md flex items-center gap-xs text-primary">
-              <span className="font-headline-md text-headline-md">Requires Action</span>
-              <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              <span className="font-headline-md text-headline-md">
+                Requires Action
+              </span>
+              <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
+                arrow_forward
+              </span>
             </div>
           </button>
 
           {/* Fully Consumed Materials */}
           <div className="bg-surface-container-lowest border border-outline-variant p-lg flex justify-between items-center group hover:bg-primary hover:text-on-primary transition-colors duration-300">
-            <span className="font-label-md text-label-md uppercase tracking-widest group-hover:text-on-primary">Fully Consumed</span>
-            <span className="font-headline-md text-headline-md font-bold group-hover:text-on-primary tabular-nums">{loading ? "—" : Number(s.fullyConsumedCount) || 0}</span>
+            <span className="font-label-md text-label-md uppercase tracking-widest group-hover:text-on-primary">
+              Fully Consumed
+            </span>
+            <span className="font-headline-md text-headline-md font-bold group-hover:text-on-primary tabular-nums">
+              {loading ? "—" : Number(s.fullyConsumedCount) || 0}
+            </span>
           </div>
         </div>
 
         {/* Low Stock Materials Preview */}
         <div className="col-span-1 md:col-span-4 bg-surface border border-outline-variant flex flex-col">
           <div className="p-lg border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
-            <span className="font-headline-md text-headline-md uppercase tracking-tight">Low Stock</span>
-            <span className="px-xs py-[2px] border border-primary text-primary font-label-md text-label-md uppercase">{lowStock.length} Items</span>
+            <span className="font-headline-md text-headline-md uppercase tracking-tight">
+              Low Stock
+            </span>
+            <span className="px-xs py-[2px] border border-primary text-primary font-label-md text-label-md uppercase">
+              {lowStock.length} Items
+            </span>
           </div>
           <div className="flex flex-col flex-1">
             {lowStock.length === 0 && !loading && (
@@ -256,10 +404,16 @@ function Dashboard() {
               >
                 <div className="flex items-center gap-md">
                   <div className="w-10 h-10 border border-outline-variant bg-surface-bright flex items-center justify-center">
-                    <span className="font-label-md text-label-md">{String(item.name || "?").charAt(0).toUpperCase()}</span>
+                    <span className="font-label-md text-label-md">
+                      {String(item.name || "?")
+                        .charAt(0)
+                        .toUpperCase()}
+                    </span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-body-md text-body-md font-bold">{item.name || "Untitled material"}</span>
+                    <span className="font-body-md text-body-md font-bold">
+                      {item.name || "Untitled material"}
+                    </span>
                   </div>
                 </div>
                 <span className="font-label-md text-label-md text-error tabular-nums">
@@ -273,22 +427,40 @@ function Dashboard() {
         {/* Recent Activity Feed */}
         <div className="col-span-1 md:col-span-4 bg-surface-container-lowest border border-outline-variant flex flex-col">
           <div className="p-lg border-b border-outline-variant">
-            <span className="font-headline-md text-headline-md uppercase tracking-tight">Activity Log</span>
+            <span className="font-headline-md text-headline-md uppercase tracking-tight">
+              Activity Log
+            </span>
           </div>
           <div className="p-lg flex flex-col gap-lg relative">
-            {activity.length > 1 && <div className="absolute left-[39px] top-lg bottom-lg w-px bg-outline-variant"></div>}
+            {activity.length > 1 && (
+              <div className="absolute left-[39px] top-lg bottom-lg w-px bg-outline-variant"></div>
+            )}
             {activity.length === 0 && !loading && (
-              <div className="text-on-surface-variant font-body-sm text-center py-md">No recent activity.</div>
+              <div className="text-on-surface-variant font-body-sm text-center py-md">
+                No recent activity.
+              </div>
             )}
             {activity.map((ev, i) => (
               <div key={ev.id || i} className="flex gap-md relative z-10">
-                <div className={`w-8 h-8 rounded-full border-2 border-surface-container-lowest flex items-center justify-center shrink-0 ${i === 0 ? "bg-primary" : "bg-surface-container-highest"}`}>
-                  <span className={`material-symbols-outlined text-[16px] ${i === 0 ? "text-on-primary" : "text-primary"}`}>{actionIcon(ev.action)}</span>
+                <div
+                  className={`w-8 h-8 rounded-full border-2 border-surface-container-lowest flex items-center justify-center shrink-0 ${i === 0 ? "bg-primary" : "bg-surface-container-highest"}`}
+                >
+                  <span
+                    className={`material-symbols-outlined text-[16px] ${i === 0 ? "text-on-primary" : "text-primary"}`}
+                  >
+                    {actionIcon(ev.action)}
+                  </span>
                 </div>
                 <div className="flex flex-col pt-xs">
-                  <span className="font-body-md text-body-md font-bold">{ev.action || "Event"}</span>
-                  <span className="font-body-sm text-body-sm text-on-surface-variant">{ev.description || "—"}</span>
-                  <span className="font-label-md text-label-md text-on-surface-variant/60 mt-xs uppercase">{relativeTime(ev.created_at || ev.createdAt)}</span>
+                  <span className="font-body-md text-body-md font-bold">
+                    {ev.action || "Event"}
+                  </span>
+                  <span className="font-body-sm text-body-sm text-on-surface-variant">
+                    {ev.description || "—"}
+                  </span>
+                  <span className="font-label-md text-label-md text-on-surface-variant/60 mt-xs uppercase">
+                    {relativeTime(ev.created_at || ev.createdAt)}
+                  </span>
                 </div>
               </div>
             ))}
@@ -298,7 +470,9 @@ function Dashboard() {
         {/* Recent Sales Table */}
         <div className="col-span-1 md:col-span-12 bg-surface-container-lowest border border-outline-variant overflow-x-auto">
           <div className="p-lg border-b border-outline-variant flex justify-between items-center">
-            <span className="font-headline-md text-headline-md uppercase tracking-tight">Recent Sales</span>
+            <span className="font-headline-md text-headline-md uppercase tracking-tight">
+              Recent Sales
+            </span>
             <button
               onClick={() => navigate("/sales-history")}
               className="font-label-md text-label-md text-primary uppercase tracking-widest border border-outline-variant px-md py-xs hover:bg-surface-container-low"
@@ -309,46 +483,90 @@ function Dashboard() {
           <table className="w-full text-left min-w-[900px]">
             <thead className="bg-surface-container-low border-b border-outline-variant">
               <tr>
-                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest w-[180px]">Material</th>
-                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-right">Qty Used</th>
-                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-right">Total (₱)</th>
-                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-center w-[120px]">Status</th>
-                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest max-w-[200px]">Remarks</th>
-                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Created By</th>
-                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest w-[140px]">Date</th>
+                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest w-[180px]">
+                  Material
+                </th>
+                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-right">
+                  Qty Used
+                </th>
+                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-right">
+                  Total (₱)
+                </th>
+                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest text-center w-[120px]">
+                  Status
+                </th>
+                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest max-w-[200px]">
+                  Remarks
+                </th>
+                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">
+                  Created By
+                </th>
+                <th className="p-md font-label-md text-label-md text-on-surface-variant uppercase tracking-widest w-[140px]">
+                  Date
+                </th>
               </tr>
             </thead>
             <tbody className="font-body-sm text-body-sm text-on-surface">
               {loading && (
                 <tr>
-                  <td colSpan={7} className="p-xl text-center text-on-surface-variant">
-                    <span className="material-symbols-outlined animate-spin align-middle mr-sm">refresh</span>
+                  <td
+                    colSpan={7}
+                    className="p-xl text-center text-on-surface-variant"
+                  >
+                    <span className="material-symbols-outlined animate-spin align-middle mr-sm">
+                      refresh
+                    </span>
                     Loading sales...
                   </td>
                 </tr>
               )}
               {!loading && recentSales.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-xl text-center text-on-surface-variant">
+                  <td
+                    colSpan={7}
+                    className="p-xl text-center text-on-surface-variant"
+                  >
                     No sales recorded yet.
                   </td>
                 </tr>
               )}
               {!loading &&
                 recentSales.map((sale) => {
-                  const materialName = sale.material_name || sale.material?.name || "Untitled material";
-                  const createdBy = sale.created_by_name || sale.createdByName || "—";
+                  const materialName =
+                    sale.material_name ||
+                    sale.material?.name ||
+                    "Untitled material";
+                  const createdBy =
+                    sale.created_by_name || sale.createdByName || "—";
                   return (
-                    <tr key={sale.id} className="border-b border-outline-variant hover:bg-surface-container transition-colors">
-                      <td className="p-md font-headline-md text-label-md font-bold truncate">{materialName}</td>
-                      <td className="p-md text-right font-mono text-on-surface-variant tabular-nums">{sale.qty_used ?? "—"}</td>
-                      <td className="p-md text-right font-mono text-primary font-bold tabular-nums">{peso(sale.total_amount)}</td>
+                    <tr
+                      key={sale.id}
+                      className="border-b border-outline-variant hover:bg-surface-container transition-colors"
+                    >
+                      <td className="p-md font-headline-md text-label-md font-bold truncate">
+                        {materialName}
+                      </td>
+                      <td className="p-md text-right font-mono text-on-surface-variant tabular-nums">
+                        {sale.qty_used ?? "—"}
+                      </td>
+                      <td className="p-md text-right font-mono text-primary font-bold tabular-nums">
+                        {peso(sale.total_amount)}
+                      </td>
                       <td className="p-md text-center">
                         <SaleStatusBadge status={sale.status} />
                       </td>
-                      <td className="p-md truncate max-w-[200px] text-on-surface-variant" title={sale.remarks || ""}>{sale.remarks || "-"}</td>
-                      <td className="p-md text-on-surface-variant">{createdBy}</td>
-                      <td className="p-md font-mono text-on-surface-variant tabular-nums">{formatDateTime(sale.created_at || sale.createdAt)}</td>
+                      <td
+                        className="p-md truncate max-w-[200px] text-on-surface-variant"
+                        title={sale.remarks || ""}
+                      >
+                        {sale.remarks || "-"}
+                      </td>
+                      <td className="p-md text-on-surface-variant">
+                        {createdBy}
+                      </td>
+                      <td className="p-md font-mono text-on-surface-variant tabular-nums">
+                        {formatDateTime(sale.created_at || sale.createdAt)}
+                      </td>
                     </tr>
                   );
                 })}

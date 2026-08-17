@@ -23,6 +23,14 @@ export function updateMemberPermissions(businessId, memberId, permissions) {
   });
 }
 
+// Sets the cut_by_percentage for a Shareholder or Owner member.
+export function updateShareholderCut(businessId, memberId, percentage) {
+  return apiRequest(`/api/businesses/${businessId}/members/${memberId}/shareholder-cut`, {
+    method: "PATCH",
+    body: JSON.stringify({ percentage }),
+  });
+}
+
 // Removes a member from the business.
 export function removeMember(businessId, memberId) {
   return apiRequest(`/api/businesses/${businessId}/members/${memberId}`, {
