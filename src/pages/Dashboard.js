@@ -124,7 +124,7 @@ function Dashboard() {
     (role === "OWNER" || role === "SHAREHOLDER") && myCut !== null;
   const activeCut = myCut?.[cutPeriod] || {};
   const cutRaw = activeCut.raw ?? null;
-  const cutAfterExpenses = activeCut.afterExpenses ?? null;
+  // const cutAfterExpenses = activeCut.afterExpenses ?? null;
 
   // No workspace chosen yet.
   if (!businessId) {
