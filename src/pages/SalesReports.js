@@ -2,6 +2,9 @@ import React, { useState, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useActiveBusiness } from "../context/ActiveBusinessContext";
 import { useSalesReport } from "../hooks/useSalesReport";
+import {
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
+} from "recharts";
 
 const PERIODS = [
   { label: "Daily", value: "daily" },
@@ -27,19 +30,68 @@ function pesoCompact(value) {
   return `₱${new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(num)}`;
 }
 
-// Builds the SVG geometry for the revenue line from timeline points.
-function buildChart(timeline) {
-  const W = 1000;
-  const TOP = 20;
-  const BOTTOM = 280;
-  const n = timeline.length;
-  const max = Math.max(1, ...timeline.map((t) => Number(t.revenue) || 0));
-  const points = timeline.map((t, i) => {
-    const x = n > 1 ? (i / (n - 1)) * W : W / 2;
-    const y = BOTTOM - ((Number(t.revenue) || 0) / max) * (BOTTOM - TOP);
-    return { x, y, ...t };
-  });
-  return { points, polyline: points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") };
+function RevenueTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-surface-container-lowest border border-primary px-md py-sm flex flex-col gap-xs shadow-lg">
+      <span className="font-label-md text-on-surface-variant uppercase tracking-widest">{label}</span>
+      <span className="font-headline-md text-headline-md text-primary font-bold tabular-nums">{peso(payload[0].value)}</span>
+    </div>
+  );
+}
+
+function RevenueChart({ timeline }) {
+  if (timeline.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-on-surface-variant font-body-md">
+        No sales recorded for this period.
+      </div>
+    );
+  }
+
+  const data = timeline.map((t) => ({ label: t.label, revenue: Number(t.revenue) || 0 }));
+  const maxVal = Math.max(...data.map((d) => d.revenue));
+  const avgVal = data.reduce((s, d) => s + d.revenue, 0) / data.length;
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="#000000" stopOpacity={0.15} />
+            <stop offset="95%" stopColor="#000000" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e2e2" vertical={false} />
+        <XAxis
+          dataKey="label"
+          tick={{ fontSize: 10, fill: "#7e7576", fontFamily: "inherit" }}
+          tickLine={false}
+          axisLine={{ stroke: "#e2e2e2" }}
+          interval="preserveStartEnd"
+        />
+        <YAxis
+          tickFormatter={(v) => pesoCompact(v)}
+          tick={{ fontSize: 10, fill: "#7e7576", fontFamily: "inherit" }}
+          tickLine={false}
+          axisLine={false}
+          width={56}
+        />
+        <Tooltip content={<RevenueTooltip />} cursor={{ stroke: "#000000", strokeWidth: 1, strokeDasharray: "4 4" }} />
+        <ReferenceLine y={avgVal} stroke="#7e7576" strokeDasharray="4 4" strokeWidth={1} label={{ value: "avg", position: "insideTopRight", fontSize: 10, fill: "#7e7576" }} />
+        <Area
+          type="monotone"
+          dataKey="revenue"
+          stroke="#000000"
+          strokeWidth={2.5}
+          fill="url(#revenueGrad)"
+          dot={false}
+          activeDot={{ r: 5, fill: "#000000", stroke: "#ffffff", strokeWidth: 2 }}
+          isAnimationActive
+        />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
 }
 
 function SalesReports() {
@@ -60,14 +112,14 @@ function SalesReports() {
   const timeline = report?.timeline || [];
   const segments = report?.segments || [];
 
-  const { points, polyline } = buildChart(timeline);
-
   const revenueTrend = Number(kpis.revenueTrendPct);
   const hasRevenueTrend = !Number.isNaN(revenueTrend);
   const revenueUp = revenueTrend >= 0;
+  const totalRevenue = Number(kpis.totalRevenue) || 0;
+  const sparkData = timeline.map((t) => ({ revenue: Number(t.revenue) || 0 }));
+  const sparkMax = Math.max(1, ...sparkData.map((d) => d.revenue));
 
-  const hasProfit = kpis.estimatedProfit !== undefined && kpis.estimatedProfit !== null;
-  const hasMargin = kpis.profitMarginPct !== undefined && kpis.profitMarginPct !== null;
+
 
   // No workspace chosen yet.
   if (!businessId) {
@@ -149,66 +201,43 @@ function SalesReports() {
                 </span>
               </div>
               <div className="flex-1 w-full h-full min-h-[280px] sm:min-h-[400px] mt-16 sm:mt-xl pt-md sm:pt-lg relative">
-                {timeline.length === 0 ? (
-                  <div className="w-full h-full flex items-center justify-center text-on-surface-variant font-body-md">
-                    No sales recorded for this period.
-                  </div>
-                ) : (
-                  <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 300">
-                    {/* Grid Lines */}
-                    <line className="text-surface-container-high" stroke="currentColor" strokeDasharray="4 4" strokeWidth="1" x1="0" x2="1000" y1="50" y2="50" />
-                    <line className="text-surface-container-high" stroke="currentColor" strokeDasharray="4 4" strokeWidth="1" x1="0" x2="1000" y1="150" y2="150" />
-                    <line className="text-surface-container-high" stroke="currentColor" strokeDasharray="4 4" strokeWidth="1" x1="0" x2="1000" y1="250" y2="250" />
-                    {/* Data Line */}
-                    <polyline className="text-primary" points={polyline} fill="none" stroke="currentColor" strokeWidth="3" />
-                    {/* Data Points */}
-                    {points.map((p, i) => (
-                      <circle key={i} className="text-primary" cx={p.x} cy={p.y} r="4" fill="currentColor">
-                        <title>{`${p.label || ""}: ${peso(p.revenue)}`}</title>
-                      </circle>
-                    ))}
-                  </svg>
-                )}
+                <RevenueChart timeline={timeline} />
               </div>
             </div>
 
             {/* Stats Sidebar */}
             <div className="col-span-12 lg:col-span-3 flex flex-col gap-lg">
               {/* Total Revenue Stat */}
-              <div className="flex-1 border border-primary bg-primary text-on-primary p-md sm:p-lg flex flex-col justify-between group relative overflow-hidden transition-all hover:bg-surface-bright hover:text-primary hover:border-primary min-h-[120px] sm:min-h-[140px]">
-                <span className="font-label-md uppercase tracking-widest border-b border-on-primary/30 pb-xs group-hover:border-primary/30">
+              <div className="flex-1 border border-primary bg-primary text-on-primary p-md sm:p-lg flex flex-col justify-between group relative overflow-hidden min-h-[120px] sm:min-h-[140px]">
+                <span className="font-label-md uppercase tracking-widest border-b border-on-primary/30 pb-xs">
                   Total Revenue
                 </span>
-                <div className="mt-lg sm:mt-xl">
-                  <span className="font-display-lg text-[1.35rem] sm:text-display-lg block tabular-nums group-hover:scale-105 transition-transform origin-left">
-                    {pesoCompact(kpis.totalRevenue)}
+                {/* Mini sparkline */}
+                <div className="absolute inset-0 opacity-10 pointer-events-none">
+                  <svg viewBox={`0 0 ${sparkData.length} 40`} preserveAspectRatio="none" className="w-full h-full">
+                    <polyline
+                      points={sparkData.map((d, i) => `${i},${40 - (d.revenue / sparkMax) * 38}`).join(" ")}
+                      fill="none" stroke="white" strokeWidth="1.5"
+                    />
+                  </svg>
+                </div>
+                <div className="mt-lg sm:mt-xl relative">
+                  <span className="font-display-lg text-[1.35rem] sm:text-display-lg block tabular-nums">
+                    {pesoCompact(totalRevenue)}
                   </span>
                   {hasRevenueTrend && (
-                    <div className="flex items-center gap-xs mt-sm text-surface-container-lowest group-hover:text-on-surface-variant">
+                    <div className="flex items-center gap-xs mt-sm text-on-primary/70">
                       <span className="material-symbols-outlined text-[16px]">{revenueUp ? "arrow_upward" : "arrow_downward"}</span>
                       <span className="font-body-sm">{Math.abs(revenueTrend)}% vs last period</span>
                     </div>
                   )}
-                </div>
-              </div>
-
-              {/* Estimated Profit Stat */}
-              <div className="flex-1 border border-primary bg-surface-bright p-md sm:p-lg flex flex-col justify-between group relative overflow-hidden transition-all hover:border-primary hover:bg-surface-container min-h-[120px] sm:min-h-[140px]">
-                <span className="font-label-md text-on-surface-variant uppercase tracking-widest border-b border-primary/30 pb-xs group-hover:text-primary">
-                  Estimated Profit
-                </span>
-                <div className="mt-lg sm:mt-xl">
-                  <span className="font-display-lg text-[1.35rem] sm:text-display-lg text-primary block tabular-nums group-hover:-translate-y-1 transition-transform">
-                    {hasProfit ? pesoCompact(kpis.estimatedProfit) : "—"}
-                  </span>
-                  {hasMargin && (
-                    <div className="flex items-center gap-xs mt-sm text-on-surface-variant">
-                      <span className="material-symbols-outlined text-[16px]">trending_up</span>
-                      <span className="font-body-sm">Margin: {kpis.profitMarginPct}%</span>
-                    </div>
+                  {!hasRevenueTrend && (
+                    <span className="font-body-sm text-on-primary/50 mt-sm block">No prior period to compare</span>
                   )}
                 </div>
               </div>
+
+
             </div>
           </div>
 

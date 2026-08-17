@@ -10,6 +10,14 @@ const NAV_GROUPS = [
     items: [{ to: "/dashboard", icon: "dashboard", text: "Dashboard" }],
   },
   {
+    label: "Insights",
+    items: [
+      { to: "/sales-calendar", icon: "calendar_month", text: "Sales Calendar" },
+      { to: "/sales-reports", icon: "bar_chart", text: "Sales Reports" },
+      { to: "/inventory-reports", icon: "monitoring", text: "Inventory Reports" },
+    ],
+  },
+  {
     label: "Inventory",
     items: [
       { to: "/inventory-materials", icon: "inventory_2", text: "Materials" },
@@ -21,14 +29,6 @@ const NAV_GROUPS = [
     items: [
       { to: "/sales-history", icon: "history", text: "Sales History" },
       { to: "/expenses", icon: "payments", text: "Expenses" },
-    ],
-  },
-  {
-    label: "Insights",
-    items: [
-      { to: "/sales-calendar", icon: "calendar_month", text: "Sales Calendar" },
-      { to: "/sales-reports", icon: "bar_chart", text: "Sales Reports" },
-      { to: "/inventory-reports", icon: "monitoring", text: "Inventory Reports" },
     ],
   },
   {

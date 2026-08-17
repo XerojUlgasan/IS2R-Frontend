@@ -1,7 +1,10 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useActiveBusiness } from "../context/ActiveBusinessContext";
 import { useInventoryReport } from "../hooks/useInventoryReport";
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+} from "recharts";
 
 const PERIODS = [
   { label: "Daily", value: "daily" },
@@ -24,7 +27,21 @@ function statusPill(status) {
   const s = String(status || "").toUpperCase();
   if (s === "OUT") return `${base} bg-error text-on-error border-error`;
   if (s === "CRITICAL") return `${base} border-error text-error`;
-  return `${base} border-outline text-on-surface-variant`; // LOW / default
+  return `${base} border-outline text-on-surface-variant`;
+}
+
+function MovementTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-surface-container-lowest border border-primary px-md py-sm flex flex-col gap-xs shadow-lg">
+      <span className="font-label-md text-on-surface-variant uppercase tracking-widest">{label}</span>
+      {payload.map((p) => (
+        <span key={p.dataKey} className="font-body-sm" style={{ color: p.color }}>
+          {p.name}: <span className="font-bold tabular-nums">{(Number(p.value) || 0).toLocaleString()}</span>
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function InventoryReports() {
@@ -32,7 +49,7 @@ function InventoryReports() {
   const { activeBusiness } = useActiveBusiness();
   const businessId = activeBusiness?.id;
 
-  const [period, setPeriod] = useState("weekly");
+  const [period, setPeriod] = React.useState("weekly");
   const { report, loading, error, refetch } = useInventoryReport(businessId, period);
 
   const goToLogin = useCallback(() => navigate("/login"), [navigate]);
@@ -41,23 +58,18 @@ function InventoryReports() {
     if (error && error.status === 401) goToLogin();
   }, [error, goToLogin]);
 
-  // Defensive reads — the page renders even if the backend omits a section.
   const kpis = report?.kpis || {};
   const movement = report?.movement || [];
-  const statusSplit = report?.statusSplit || {};
-  const typeDistribution = report?.typeDistribution || [];
   const lowStock = report?.lowStock || [];
   const topConsumed = report?.topConsumed || [];
   const aging = report?.aging || [];
 
-  const maxMovement = Math.max(1, ...movement.flatMap((m) => [Number(m.stockedIn) || 0, Number(m.consumed) || 0]));
+  const movementData = movement.map((m) => ({
+    label: m.label,
+    "Stocked In": Number(m.stockedIn) || 0,
+    Consumed: Number(m.consumed) || 0,
+  }));
 
-  const availablePct = Math.max(0, Math.min(100, Number(statusSplit.availablePct) || 0));
-  const R = 42;
-  const C = 2 * Math.PI * R;
-  const availableDash = (availablePct / 100) * C;
-
-  // No workspace chosen yet.
   if (!businessId) {
     return (
       <div className="flex flex-col items-center justify-center gap-md min-h-[60vh] text-center">
@@ -101,7 +113,6 @@ function InventoryReports() {
         </div>
       </div>
 
-      {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center gap-sm py-xl border border-primary bg-surface-bright text-on-surface-variant">
           <span className="material-symbols-outlined animate-spin">refresh</span>
@@ -109,7 +120,6 @@ function InventoryReports() {
         </div>
       )}
 
-      {/* Error */}
       {!loading && error && error.status !== 401 && (
         <div className="flex flex-col items-center justify-center gap-md py-xl border border-primary bg-surface-bright text-center">
           <span className="material-symbols-outlined text-[32px] text-error">error</span>
@@ -128,7 +138,6 @@ function InventoryReports() {
         <>
           {/* KPI Cards */}
           <div className="grid grid-cols-12 gap-lg">
-            {/* Units on hand */}
             <div className="col-span-12 sm:col-span-6 lg:col-span-4 border border-primary bg-surface-bright p-lg flex flex-col justify-between group transition-all hover:bg-surface-container min-h-[160px]">
               <span className="font-label-md text-on-surface-variant uppercase tracking-widest border-b border-primary/30 pb-xs group-hover:text-primary">
                 Total Units On Hand
@@ -139,7 +148,6 @@ function InventoryReports() {
               </div>
             </div>
 
-            {/* Active materials */}
             <div className="col-span-12 sm:col-span-6 lg:col-span-4 border border-primary bg-surface-bright p-lg flex flex-col justify-between group transition-all hover:bg-surface-container min-h-[160px]">
               <span className="font-label-md text-on-surface-variant uppercase tracking-widest border-b border-primary/30 pb-xs group-hover:text-primary">
                 Active Materials
@@ -150,7 +158,6 @@ function InventoryReports() {
               </div>
             </div>
 
-            {/* Low / out of stock */}
             <div className="col-span-12 sm:col-span-6 lg:col-span-4 border border-primary bg-surface-bright p-lg flex flex-col justify-between group transition-all hover:bg-surface-container min-h-[160px]">
               <span className="font-label-md text-on-surface-variant uppercase tracking-widest border-b border-primary/30 pb-xs group-hover:text-primary">
                 Low / Out Of Stock
@@ -165,109 +172,45 @@ function InventoryReports() {
             </div>
           </div>
 
-          {/* Main content: movement chart + side panels */}
-          <div className="grid grid-cols-12 gap-lg">
-            {/* Stock movement chart */}
-            <div className="col-span-12 lg:col-span-8 border border-primary bg-surface-bright flex flex-col p-md sm:p-lg">
-              <div className="flex flex-col gap-sm sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <span className="font-headline-md text-headline-md text-primary block">Stock Movement</span>
-                  <span className="font-label-md text-on-surface-variant uppercase tracking-widest mt-xs block">Stocked In vs Consumed</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-sm sm:gap-md">
-                  <div className="flex items-center gap-xs">
-                    <span className="w-3 h-3 bg-primary inline-block"></span>
-                    <span className="font-label-md text-on-surface-variant uppercase tracking-widest">In</span>
-                  </div>
-                  <div className="flex items-center gap-xs">
-                    <span className="w-3 h-3 border border-primary inline-block"></span>
-                    <span className="font-label-md text-on-surface-variant uppercase tracking-widest">Consumed</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Grouped bar chart */}
-              {movement.length === 0 ? (
-                <div className="flex-1 min-h-[320px] flex items-center justify-center text-on-surface-variant font-body-md">
-                  No movement recorded for this period.
-                </div>
-              ) : (
-                <div className="flex-1 min-h-[320px] mt-xl flex items-end justify-between gap-md">
-                  {movement.map((m, i) => (
-                    <div key={m.label || i} className="flex-1 flex flex-col items-center gap-sm h-full justify-end">
-                      <div className="w-full flex items-end justify-center gap-xs h-full">
-                        <div
-                          className="w-1/2 bg-primary transition-all"
-                          style={{ height: `${((Number(m.stockedIn) || 0) / maxMovement) * 100}%` }}
-                          title={`Stocked in: ${num(m.stockedIn)}`}
-                        ></div>
-                        <div
-                          className="w-1/2 border border-primary bg-surface transition-all"
-                          style={{ height: `${((Number(m.consumed) || 0) / maxMovement) * 100}%` }}
-                          title={`Consumed: ${num(m.consumed)}`}
-                        ></div>
-                      </div>
-                      <span className="font-label-md text-[11px] text-on-surface-variant uppercase tracking-widest">{m.label}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+          {/* Stock Movement Chart */}
+          <div className="border border-primary bg-surface-bright flex flex-col p-md sm:p-lg">
+            <div className="mb-lg">
+              <span className="font-headline-md text-headline-md text-primary block">Stock Movement</span>
+              <span className="font-label-md text-on-surface-variant uppercase tracking-widest mt-xs block">Stocked In vs Consumed</span>
             </div>
-
-            {/* Side panels */}
-            <div className="col-span-12 lg:col-span-4 flex flex-col gap-lg">
-              {/* Stock status donut */}
-              <div className="border border-primary bg-surface-bright p-md sm:p-lg flex flex-col gap-md">
-                <span className="font-headline-md text-body-lg text-primary">Stock Status</span>
-                <div className="flex flex-col gap-md sm:flex-row sm:items-center sm:gap-lg">
-                  <svg viewBox="0 0 100 100" className="w-[104px] h-[104px] -rotate-90 shrink-0">
-                    <circle cx="50" cy="50" r={R} fill="none" className="text-surface-container-high" stroke="currentColor" strokeWidth="12" />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r={R}
-                      fill="none"
-                      className="text-primary"
-                      stroke="currentColor"
-                      strokeWidth="12"
-                      strokeDasharray={`${availableDash} ${C - availableDash}`}
+            {movement.length === 0 ? (
+              <div className="min-h-[320px] flex items-center justify-center text-on-surface-variant font-body-md">
+                No movement recorded for this period.
+              </div>
+            ) : (
+              <div style={{ height: 320 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={movementData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }} barCategoryGap="30%" barGap={4}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e2e2" vertical={false} />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 10, fill: "#7e7576", fontFamily: "inherit" }}
+                      tickLine={false}
+                      axisLine={{ stroke: "#e2e2e2" }}
                     />
-                  </svg>
-                  <div className="flex flex-col gap-sm">
-                    <div className="flex items-center gap-xs">
-                      <span className="w-3 h-3 bg-primary inline-block"></span>
-                      <span className="font-body-sm text-on-surface">Available <span className="tabular-nums font-bold">{availablePct}%</span></span>
-                    </div>
-                    <div className="flex items-center gap-xs">
-                      <span className="w-3 h-3 bg-surface-container-high inline-block"></span>
-                      <span className="font-body-sm text-on-surface-variant">Consumed <span className="tabular-nums font-bold">{100 - availablePct}%</span></span>
-                    </div>
-                  </div>
-                </div>
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "#7e7576", fontFamily: "inherit" }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={40}
+                    />
+                    <Tooltip content={<MovementTooltip />} cursor={{ fill: "#00000008" }} />
+                    <Legend
+                      iconType="square"
+                      iconSize={10}
+                      wrapperStyle={{ fontSize: 10, fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.08em", paddingTop: 8 }}
+                    />
+                    <Bar dataKey="Stocked In" fill="#000000" radius={[2, 2, 0, 0]} maxBarSize={32} />
+                    <Bar dataKey="Consumed" fill="#c6c6c6" radius={[2, 2, 0, 0]} maxBarSize={32} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-
-              {/* Material type distribution */}
-              <div className="border border-primary bg-surface-bright p-md sm:p-lg flex flex-col gap-md flex-1">
-                <span className="font-headline-md text-body-lg text-primary">Material Types</span>
-                {typeDistribution.length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center text-on-surface-variant font-body-sm py-lg">No materials yet.</div>
-                ) : (
-                  <div className="flex flex-col gap-md mt-xs">
-                    {typeDistribution.map((t, i) => (
-                      <div key={t.type || i} className="flex flex-col gap-xs">
-                        <div className="flex justify-between items-baseline">
-                          <span className="font-body-sm text-on-surface">{t.type || "Untyped"}</span>
-                          <span className="font-body-sm text-on-surface-variant tabular-nums">{num(t.units)} · {Number(t.pct) || 0}%</span>
-                        </div>
-                        <div className="w-full h-2 bg-surface-container-high">
-                          <div className="h-full bg-primary" style={{ width: `${Math.max(0, Math.min(100, Number(t.pct) || 0))}%` }}></div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Low-stock watchlist */}
@@ -313,7 +256,6 @@ function InventoryReports() {
 
           {/* Top consumed + Aging stock */}
           <div className="grid grid-cols-12 gap-lg">
-            {/* Top consumed */}
             <div className="col-span-12 lg:col-span-6 border border-primary bg-surface-bright">
               <div className="p-md border-b border-primary bg-surface-container-low">
                 <span className="font-headline-md text-body-lg text-primary">Top Consumed Materials</span>
@@ -347,7 +289,6 @@ function InventoryReports() {
               </div>
             </div>
 
-            {/* Aging stock */}
             <div className="col-span-12 lg:col-span-6 border border-primary bg-surface-bright">
               <div className="p-md border-b border-primary bg-surface-container-low">
                 <span className="font-headline-md text-body-lg text-primary">Aging / Slow-Moving Stock</span>

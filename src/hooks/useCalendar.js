@@ -52,15 +52,9 @@ export function useCalendarDetail(businessId, type, date) {
     }
     setLoading(true);
     setError(null);
-    const apply = (d) => setDetail(d);
     try {
-      const result = await getCalendarDetail(businessId, type, date, {
-        onCachedData: (cached) => {
-          apply(cached);
-          setLoading(false);
-        },
-      });
-      apply(result);
+      const result = await getCalendarDetail(businessId, type, date, { cache: false });
+      setDetail(result);
     } catch (err) {
       setError(err);
     } finally {
