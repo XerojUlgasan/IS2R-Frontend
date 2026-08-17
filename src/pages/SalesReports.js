@@ -3,7 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useActiveBusiness } from "../context/ActiveBusinessContext";
 import { useSalesReport } from "../hooks/useSalesReport";
 import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ReferenceLine,
 } from "recharts";
 
 const PERIODS = [
@@ -34,8 +41,12 @@ function RevenueTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-surface-container-lowest border border-primary px-md py-sm flex flex-col gap-xs shadow-lg">
-      <span className="font-label-md text-on-surface-variant uppercase tracking-widest">{label}</span>
-      <span className="font-headline-md text-headline-md text-primary font-bold tabular-nums">{peso(payload[0].value)}</span>
+      <span className="font-label-md text-on-surface-variant uppercase tracking-widest">
+        {label}
+      </span>
+      <span className="font-headline-md text-headline-md text-primary font-bold tabular-nums">
+        {peso(payload[0].value)}
+      </span>
     </div>
   );
 }
@@ -49,20 +60,30 @@ function RevenueChart({ timeline }) {
     );
   }
 
-  const data = timeline.map((t) => ({ label: t.label, revenue: Number(t.revenue) || 0 }));
-  const maxVal = Math.max(...data.map((d) => d.revenue));
+  const data = timeline.map((t) => ({
+    label: t.label,
+    revenue: Number(t.revenue) || 0,
+  }));
+  // const maxVal = Math.max(...data.map((d) => d.revenue));
   const avgVal = data.reduce((s, d) => s + d.revenue, 0) / data.length;
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+      <AreaChart
+        data={data}
+        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+      >
         <defs>
           <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#000000" stopOpacity={0.15} />
             <stop offset="95%" stopColor="#000000" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e2e2" vertical={false} />
+        <CartesianGrid
+          strokeDasharray="3 3"
+          stroke="#e2e2e2"
+          vertical={false}
+        />
         <XAxis
           dataKey="label"
           tick={{ fontSize: 10, fill: "#7e7576", fontFamily: "inherit" }}
@@ -77,8 +98,22 @@ function RevenueChart({ timeline }) {
           axisLine={false}
           width={56}
         />
-        <Tooltip content={<RevenueTooltip />} cursor={{ stroke: "#000000", strokeWidth: 1, strokeDasharray: "4 4" }} />
-        <ReferenceLine y={avgVal} stroke="#7e7576" strokeDasharray="4 4" strokeWidth={1} label={{ value: "avg", position: "insideTopRight", fontSize: 10, fill: "#7e7576" }} />
+        <Tooltip
+          content={<RevenueTooltip />}
+          cursor={{ stroke: "#000000", strokeWidth: 1, strokeDasharray: "4 4" }}
+        />
+        <ReferenceLine
+          y={avgVal}
+          stroke="#7e7576"
+          strokeDasharray="4 4"
+          strokeWidth={1}
+          label={{
+            value: "avg",
+            position: "insideTopRight",
+            fontSize: 10,
+            fill: "#7e7576",
+          }}
+        />
         <Area
           type="monotone"
           dataKey="revenue"
@@ -86,7 +121,12 @@ function RevenueChart({ timeline }) {
           strokeWidth={2.5}
           fill="url(#revenueGrad)"
           dot={false}
-          activeDot={{ r: 5, fill: "#000000", stroke: "#ffffff", strokeWidth: 2 }}
+          activeDot={{
+            r: 5,
+            fill: "#000000",
+            stroke: "#ffffff",
+            strokeWidth: 2,
+          }}
           isAnimationActive
         />
       </AreaChart>
@@ -100,7 +140,10 @@ function SalesReports() {
   const businessId = activeBusiness?.id;
 
   const [period, setPeriod] = useState("daily");
-  const { report, loading, error, refetch } = useSalesReport(businessId, period);
+  const { report, loading, error, refetch } = useSalesReport(
+    businessId,
+    period,
+  );
 
   const goToLogin = useCallback(() => navigate("/login"), [navigate]);
 
@@ -119,14 +162,16 @@ function SalesReports() {
   const sparkData = timeline.map((t) => ({ revenue: Number(t.revenue) || 0 }));
   const sparkMax = Math.max(1, ...sparkData.map((d) => d.revenue));
 
-
-
   // No workspace chosen yet.
   if (!businessId) {
     return (
       <div className="flex flex-col items-center justify-center gap-md min-h-[60vh] text-center">
-        <span className="material-symbols-outlined text-[32px] text-primary">bar_chart</span>
-        <h2 className="font-headline-md text-headline-md text-primary">No workspace selected</h2>
+        <span className="material-symbols-outlined text-[32px] text-primary">
+          bar_chart
+        </span>
+        <h2 className="font-headline-md text-headline-md text-primary">
+          No workspace selected
+        </h2>
         <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
           Choose a business to view its sales reports.
         </p>
@@ -145,8 +190,12 @@ function SalesReports() {
       {/* Header / Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-md pb-md border-b border-primary">
         <div>
-          <h1 className="font-headline-lg text-headline-lg text-primary uppercase tracking-tight">Sales Analytics</h1>
-          <p className="font-body-md text-on-surface-variant mt-xs">Revenue &amp; Profit Trajectory</p>
+          <h1 className="font-headline-lg text-headline-lg text-primary uppercase tracking-tight">
+            Sales Analytics
+          </h1>
+          <p className="font-body-md text-on-surface-variant mt-xs">
+            Revenue &amp; Profit Trajectory
+          </p>
         </div>
         <div className="flex flex-wrap items-center border border-primary bg-surface p-xs gap-xs w-full sm:w-auto">
           {PERIODS.map((p) => (
@@ -168,7 +217,9 @@ function SalesReports() {
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center gap-sm py-xl border border-primary bg-surface-bright text-on-surface-variant flex-1">
-          <span className="material-symbols-outlined animate-spin">refresh</span>
+          <span className="material-symbols-outlined animate-spin">
+            refresh
+          </span>
           <span className="font-body-md">Loading sales report...</span>
         </div>
       )}
@@ -176,13 +227,19 @@ function SalesReports() {
       {/* Error */}
       {!loading && error && error.status !== 401 && (
         <div className="flex flex-col items-center justify-center gap-md py-xl border border-primary bg-surface-bright text-center flex-1">
-          <span className="material-symbols-outlined text-[32px] text-error">error</span>
-          <p className="font-body-md text-body-md text-on-surface">{error.message || "Something went wrong, try again."}</p>
+          <span className="material-symbols-outlined text-[32px] text-error">
+            error
+          </span>
+          <p className="font-body-md text-body-md text-on-surface">
+            {error.message || "Something went wrong, try again."}
+          </p>
           <button
             onClick={refetch}
             className="px-lg py-md bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest border border-primary hover:bg-surface hover:text-primary transition-colors flex items-center gap-sm"
           >
-            <span className="material-symbols-outlined text-[18px]">refresh</span>
+            <span className="material-symbols-outlined text-[18px]">
+              refresh
+            </span>
             Retry
           </button>
         </div>
@@ -195,7 +252,9 @@ function SalesReports() {
             {/* Large Chart Cell */}
             <div className="col-span-12 lg:col-span-9 border border-primary bg-surface-bright flex flex-col p-md sm:p-lg relative group transition-colors hover:bg-surface-container-lowest">
               <div className="absolute top-md left-md sm:top-lg sm:left-lg">
-                <span className="font-headline-md text-headline-md text-primary block">Revenue Timeline</span>
+                <span className="font-headline-md text-headline-md text-primary block">
+                  Revenue Timeline
+                </span>
                 <span className="font-label-md text-on-surface-variant uppercase tracking-widest mt-xs block">
                   {TIMELINE_LABELS[period] || ""}
                 </span>
@@ -214,10 +273,20 @@ function SalesReports() {
                 </span>
                 {/* Mini sparkline */}
                 <div className="absolute inset-0 opacity-10 pointer-events-none">
-                  <svg viewBox={`0 0 ${sparkData.length} 40`} preserveAspectRatio="none" className="w-full h-full">
+                  <svg
+                    viewBox={`0 0 ${sparkData.length} 40`}
+                    preserveAspectRatio="none"
+                    className="w-full h-full"
+                  >
                     <polyline
-                      points={sparkData.map((d, i) => `${i},${40 - (d.revenue / sparkMax) * 38}`).join(" ")}
-                      fill="none" stroke="white" strokeWidth="1.5"
+                      points={sparkData
+                        .map(
+                          (d, i) => `${i},${40 - (d.revenue / sparkMax) * 38}`,
+                        )
+                        .join(" ")}
+                      fill="none"
+                      stroke="white"
+                      strokeWidth="1.5"
                     />
                   </svg>
                 </div>
@@ -227,39 +296,58 @@ function SalesReports() {
                   </span>
                   {hasRevenueTrend && (
                     <div className="flex items-center gap-xs mt-sm text-on-primary/70">
-                      <span className="material-symbols-outlined text-[16px]">{revenueUp ? "arrow_upward" : "arrow_downward"}</span>
-                      <span className="font-body-sm">{Math.abs(revenueTrend)}% vs last period</span>
+                      <span className="material-symbols-outlined text-[16px]">
+                        {revenueUp ? "arrow_upward" : "arrow_downward"}
+                      </span>
+                      <span className="font-body-sm">
+                        {Math.abs(revenueTrend)}% vs last period
+                      </span>
                     </div>
                   )}
                   {!hasRevenueTrend && (
-                    <span className="font-body-sm text-on-primary/50 mt-sm block">No prior period to compare</span>
+                    <span className="font-body-sm text-on-primary/50 mt-sm block">
+                      No prior period to compare
+                    </span>
                   )}
                 </div>
               </div>
-
-
             </div>
           </div>
 
           {/* Bottom Data Table */}
           <div className="mt-md border border-primary bg-surface-bright">
             <div className="p-md border-b border-primary bg-surface-container-low flex justify-between items-center">
-              <span className="font-headline-md text-body-lg text-primary">Top Performing Materials</span>
+              <span className="font-headline-md text-body-lg text-primary">
+                Top Performing Materials
+              </span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="border-b border-primary/30 bg-surface">
-                    <th className="p-md font-label-md text-on-surface-variant uppercase tracking-wider w-1/3">Material</th>
-                    <th className="p-md font-label-md text-on-surface-variant uppercase tracking-wider text-right">Volume</th>
-                    <th className="p-md font-label-md text-on-surface-variant uppercase tracking-wider text-right">Revenue</th>
-                    <th className="p-md font-label-md text-on-surface-variant uppercase tracking-wider text-right">Growth</th>
+                    <th className="p-md font-label-md text-on-surface-variant uppercase tracking-wider w-1/3">
+                      Material
+                    </th>
+                    <th className="p-md font-label-md text-on-surface-variant uppercase tracking-wider text-right">
+                      Volume
+                    </th>
+                    <th className="p-md font-label-md text-on-surface-variant uppercase tracking-wider text-right">
+                      Revenue
+                    </th>
+                    <th className="p-md font-label-md text-on-surface-variant uppercase tracking-wider text-right">
+                      Growth
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {segments.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="p-xl text-center text-on-surface-variant font-body-md">No sales in this period.</td>
+                      <td
+                        colSpan={4}
+                        className="p-xl text-center text-on-surface-variant font-body-md"
+                      >
+                        No sales in this period.
+                      </td>
                     </tr>
                   )}
                   {segments.map((seg, i) => {
@@ -267,7 +355,10 @@ function SalesReports() {
                     const hasGrowth = !Number.isNaN(growth);
                     const growthUp = growth >= 0;
                     return (
-                      <tr key={seg.id || seg.name || i} className="border-b border-primary/10 hover:bg-surface-container-lowest transition-colors group">
+                      <tr
+                        key={seg.id || seg.name || i}
+                        className="border-b border-primary/10 hover:bg-surface-container-lowest transition-colors group"
+                      >
                         <td className="p-md font-body-md font-bold text-primary flex items-center gap-sm">
                           <div className="w-2 h-2 bg-primary rounded-full group-hover:scale-150 transition-transform"></div>
                           {seg.name || "Untitled material"}
@@ -275,8 +366,12 @@ function SalesReports() {
                         <td className="p-md font-body-sm text-on-surface-variant text-right tabular-nums">
                           {(Number(seg.volume) || 0).toLocaleString()} units
                         </td>
-                        <td className="p-md font-body-md text-primary text-right tabular-nums">{peso(seg.revenue)}</td>
-                        <td className={`p-md font-label-md text-right tabular-nums ${hasGrowth && !growthUp ? "text-error" : "text-primary"}`}>
+                        <td className="p-md font-body-md text-primary text-right tabular-nums">
+                          {peso(seg.revenue)}
+                        </td>
+                        <td
+                          className={`p-md font-label-md text-right tabular-nums ${hasGrowth && !growthUp ? "text-error" : "text-primary"}`}
+                        >
                           {hasGrowth ? `${growthUp ? "+" : ""}${growth}%` : "—"}
                         </td>
                       </tr>
