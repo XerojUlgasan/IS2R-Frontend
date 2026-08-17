@@ -24,7 +24,7 @@ import ComingSoon from "./pages/ComingSoon";
 import Calendar from "./pages/Calendar";
 
 function App() {
-  console.log("BASE API URL CHANGED TO VERCEL");
+  console.log("BASE API URL CHANGED TO RENDER");
   return (
     <BrowserRouter>
       <ActiveBusinessProvider>
