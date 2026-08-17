@@ -24,33 +24,40 @@ import ComingSoon from "./pages/ComingSoon";
 import Calendar from "./pages/Calendar";
 
 function App() {
+  console.log("BASE API URL CHANGED TO VERCEL");
   return (
     <BrowserRouter>
       <ActiveBusinessProvider>
         <Routes>
-        {/* Public / standalone pages */}
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/my-businesses" element={<WorkspacesPage />} />
+          {/* Public / standalone pages */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/my-businesses" element={<WorkspacesPage />} />
 
-        {/* Authenticated app shell (sidebar + header) */}
-        <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/sales-calendar" element={<Calendar />} />
-          <Route path="/inventory-materials" element={<Materials />} />
-          <Route path="/inventory-stocks" element={<Stocks />} />
-          <Route path="/sales-history" element={<SalesHistory />} />
-          <Route path="/sales-reports" element={<SalesReports />} />
-          <Route path="/members" element={<Members />} />
-          <Route path="/audit-logs" element={<AuditLogs />} />
-          <Route path="/business-settings" element={<BusinessSettings />} />
-          <Route path="/personal-settings" element={<PersonalSettings />} />
-          <Route path="/expenses" element={<Expenses />} />
-          <Route path="/pending-payments" element={<ComingSoon title="Pending Payments" />} />
-          <Route path="/inventory-reports" element={<InventoryReports />} />
-          <Route path="/invitations" element={<ComingSoon title="Invitations" />} />
-        </Route>
+          {/* Authenticated app shell (sidebar + header) */}
+          <Route element={<AppLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/sales-calendar" element={<Calendar />} />
+            <Route path="/inventory-materials" element={<Materials />} />
+            <Route path="/inventory-stocks" element={<Stocks />} />
+            <Route path="/sales-history" element={<SalesHistory />} />
+            <Route path="/sales-reports" element={<SalesReports />} />
+            <Route path="/members" element={<Members />} />
+            <Route path="/audit-logs" element={<AuditLogs />} />
+            <Route path="/business-settings" element={<BusinessSettings />} />
+            <Route path="/personal-settings" element={<PersonalSettings />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route
+              path="/pending-payments"
+              element={<ComingSoon title="Pending Payments" />}
+            />
+            <Route path="/inventory-reports" element={<InventoryReports />} />
+            <Route
+              path="/invitations"
+              element={<ComingSoon title="Invitations" />}
+            />
+          </Route>
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
