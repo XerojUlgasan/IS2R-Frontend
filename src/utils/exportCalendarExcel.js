@@ -103,33 +103,6 @@ function sectionHeader(label, n) {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-/**
- * detail shape expected from the enhanced backend:
- * {
- *   totalSalesAmount, totalSalesCount, totalExpenses,
- *   pendingSalesCount, scrapCount, abandonedCount, rejectedCount,
- *   totalStockAdded, totalConsumed,
- *   deletedSalesCount, deletedStocksCount,
- *
- *   // Sales detail per material
- *   salesByMaterial: [{ materialId, name, paid, pending, scrap, abandoned, reject, salesAmount, deletedSales }]
- *
- *   // Stock consumption
- *   stockConsumption: [{
- *     materialId, name,
- *     totalConsumed, batchesConsumed, stockAdded, remainingStock,
- *     batches: [{ batchId, mfgPrice, qtyAdded, qtyDeducted, remainingStock, status }]
- *   }]
- *
- *   // Expenses
- *   generalExpenses: [{ category, count, totalAmount, remarks }]
- *   stockExpenses:   [{ materialName, batchId, category, amount, remarks }]
- *   totalExpenses
- *
- *   // P&L
- *   revenue, cogs, grossProfit, netProfitLoss
- * }
- */
 export function exportCalendarExcel(detail, meta = {}) {
   const {
     businessName = "Business",
@@ -139,7 +112,7 @@ export function exportCalendarExcel(detail, meta = {}) {
     periodType = "",
   } = meta;
 
-  const N = 8; // total columns
+  const N = 8;
   const rows = [];
   const merges = [];
 
@@ -147,239 +120,170 @@ export function exportCalendarExcel(detail, meta = {}) {
     merges.push({ s: { r, c: c1 }, e: { r, c: c2 } });
   }
 
-  // ── 1. Report Header ───────────────────────────────────────────────────────
-  rows.push(pad([c(businessName, ST.title)], N));           mergeRow(rows.length - 1);
+  rows.push(pad([c(businessName, ST.title)], N)); mergeRow(rows.length - 1);
   rows.push(pad([c("Sales Calendar Report", ST.subtitle)], N)); mergeRow(rows.length - 1);
-  rows.push(pad([c(`Generated: ${dateLabel}`, ST.meta)], N));   mergeRow(rows.length - 1);
+  rows.push(pad([c(`Generated: ${dateLabel}`, ST.meta)], N)); mergeRow(rows.length - 1);
   rows.push(pad([c(`Period: ${fromDate} to ${toDate}`, ST.meta)], N)); mergeRow(rows.length - 1);
   rows.push(pad([c(`Period Type: ${periodType || (fromDate === toDate ? "Daily" : "Monthly")}`, ST.meta)], N)); mergeRow(rows.length - 1);
   rows.push(spacer(N));
 
-  // ── 2. Summary Block ───────────────────────────────────────────────────────
   rows.push(sectionHeader("SUMMARY", N)); mergeRow(rows.length - 1);
 
   const summaryItems = [
-    ["Total Revenue (₱)",    detail?.totalSalesAmount ?? 0, true],
-    ["Total Sales Count",    detail?.totalSalesCount  ?? 0, false],
-    ["Pending Sales Count",  detail?.pendingSalesCount ?? 0, false],
-    ["Total Expenses (₱)",   detail?.totalExpenses    ?? 0, true],
-    ["Net Profit / Loss (₱)", detail?.netProfitLoss   ?? 0, true],
+    ["Total Revenue (₱)", Number(detail?.totalRevenue ?? detail?.profitLossSummary?.revenue ?? 0), true],
+    ["Total Sales Count", Number(detail?.totalSalesCount ?? 0), false],
+    ["Pending Sales Count", Number(detail?.pendingSalesCount ?? 0), false],
+    ["Total Expenses (₱)", Number(detail?.totalExpenses ?? detail?.profitLossSummary?.totalExpenses ?? 0), true],
   ];
 
   summaryItems.forEach(([label, value, isPeso]) => {
-    const row = [
+    rows.push([
       c(label, ST.label),
       c(value, isPeso ? ST.bodyPeso : ST.bodyR),
       ...Array(N - 2).fill(blank()),
-    ];
-    merges.push({ s: { r: rows.length, c: 1 }, e: { r: rows.length, c: N - 1 } });
-    rows.push(row);
+    ]);
+    merges.push({ s: { r: rows.length - 1, c: 1 }, e: { r: rows.length - 1, c: N - 1 } });
   });
 
   rows.push(spacer(N));
 
-  // ── 3. Sales Detail ────────────────────────────────────────────────────────
-  rows.push(sectionHeader("SALES DETAIL", N)); mergeRow(rows.length - 1);
-
-  const salesHdrs = ["Material", "PAID", "PENDING", "Qty Consumed", "Sales Amount (₱)", "", "", ""];
-  rows.push(salesHdrs.map((h) => c(h, ST.colHdr)));
+  rows.push(sectionHeader("SALES BY MATERIAL", N)); mergeRow(rows.length - 1);
+  rows.push(["Material", "Paid", "Pending", "Qty Consumed", "Sales Amount (₱)", "", "", ""].map((h) => c(h, ST.colHdr)));
 
   const salesByMaterial = detail?.salesByMaterial || [];
-  let sTotalPaid = 0, sTotalPending = 0, sTotalQty = 0, sTotalAmt = 0;
+  let salesTotalPaid = 0;
+  let salesTotalPending = 0;
+  let salesTotalQty = 0;
+  let salesTotalAmount = 0;
 
-  salesByMaterial.forEach((m, i) => {
-    const alt = i % 2 === 1;
+  salesByMaterial.forEach((item, index) => {
+    const alt = index % 2 === 1;
     rows.push([
-      c(m.name         || "Untitled", alt ? ST.altBody : ST.body),
-      c(m.paid         ?? 0,          alt ? ST.altInt  : ST.bodyInt),
-      c(m.pending      ?? 0,          alt ? ST.altInt  : ST.bodyInt),
-      c(m.qtyConsumed  ?? 0,          alt ? ST.altQty  : ST.bodyQty),
-      c(m.salesAmount  ?? 0,          alt ? ST.altPeso : ST.bodyPeso),
-      blank(), blank(),
+      c(item.name || "Untitled", alt ? ST.altBody : ST.body),
+      c(item.paid ?? 0, alt ? ST.altInt : ST.bodyInt),
+      c(item.pending ?? 0, alt ? ST.altInt : ST.bodyInt),
+      c(item.qtyConsumed ?? 0, alt ? ST.altQty : ST.bodyQty),
+      c(item.salesAmount ?? 0, alt ? ST.altPeso : ST.bodyPeso),
+      blank(), blank(), blank(),
     ]);
-    sTotalPaid    += m.paid        ?? 0;
-    sTotalPending += m.pending     ?? 0;
-    sTotalQty     += m.qtyConsumed ?? 0;
-    sTotalAmt     += m.salesAmount ?? 0;
+    salesTotalPaid += item.paid ?? 0;
+    salesTotalPending += item.pending ?? 0;
+    salesTotalQty += item.qtyConsumed ?? 0;
+    salesTotalAmount += item.salesAmount ?? 0;
   });
 
   if (salesByMaterial.length === 0) {
-    rows.push(pad([c("No data for this period.", ST.body)], N)); mergeRow(rows.length - 1);
-  }
-
-  rows.push([
-    c("TOTAL", ST.totalL),
-    c(sTotalPaid,    ST.total),
-    c(sTotalPending, ST.total),
-    c(sTotalQty,     ST.total),
-    c(sTotalAmt,     ST.totalP),
-    blank(ST.totalL), blank(ST.totalL),
-  ]);
-
-  rows.push(spacer(N));
-
-  // ── 4. Stock Consumption ───────────────────────────────────────────────────
-  rows.push(sectionHeader("STOCK CONSUMPTION", N)); mergeRow(rows.length - 1);
-
-  const consHdrs = ["Material", "Total Qty Consumed", "Sold Qty", "Scrap Qty", "Abandoned Qty", "Reject Qty", "Stock Added (qty)", "Remaining Stock"];
-  rows.push(consHdrs.map((h) => c(h, ST.colHdr)));
-
-  const stockConsumption = detail?.stockConsumption || [];
-
-  if (stockConsumption.length === 0) {
-    rows.push(pad([c("No data for this period.", ST.body)], N)); mergeRow(rows.length - 1);
-  }
-
-  let cTotalConsumed = 0, cTotalSold = 0, cTotalAdded = 0, cTotalRemaining = 0, cTotalScrap = 0, cTotalAbandoned = 0, cTotalReject = 0;
-
-  stockConsumption.forEach((m, i) => {
-    const alt = i % 2 === 1;
-    rows.push([
-      c(m.name           || "Untitled", alt ? ST.altBody : ST.body),
-      c(m.totalConsumed  ?? 0,          alt ? ST.altQty  : ST.bodyQty),
-      c(m.soldQty        ?? 0,          alt ? ST.altQty  : ST.bodyQty),
-      c(m.scrapQty       ?? 0,          alt ? ST.altQty  : ST.bodyQty),
-      c(m.abandonedQty   ?? 0,          alt ? ST.altQty  : ST.bodyQty),
-      c(m.rejectQty      ?? 0,          alt ? ST.altQty  : ST.bodyQty),
-      c(m.stockAdded     ?? 0,          alt ? ST.altQty  : ST.bodyQty),
-      c(m.remainingStock ?? 0,          alt ? ST.altQty  : ST.bodyQty),
-    ]);
-    cTotalConsumed  += m.totalConsumed  ?? 0;
-    cTotalSold      += m.soldQty        ?? 0;
-    cTotalAdded     += m.stockAdded     ?? 0;
-    cTotalRemaining += m.remainingStock ?? 0;
-    cTotalScrap     += m.scrapQty       ?? 0;
-    cTotalAbandoned += m.abandonedQty   ?? 0;
-    cTotalReject    += m.rejectQty      ?? 0;
-  });
-
-  if (stockConsumption.length > 0) {
+    rows.push(pad([c("No sales activity in this period.", ST.body)], N)); mergeRow(rows.length - 1);
+  } else {
     rows.push([
       c("TOTAL", ST.totalL),
-      c(cTotalConsumed,  ST.total),
-      c(cTotalSold,      ST.total),
-      c(cTotalScrap,     ST.total),
-      c(cTotalAbandoned, ST.total),
-      c(cTotalReject,    ST.total),
-      c(cTotalAdded,     ST.total),
-      c(cTotalRemaining, ST.total),
+      c(salesTotalPaid, ST.total),
+      c(salesTotalPending, ST.total),
+      c(salesTotalQty, ST.total),
+      c(salesTotalAmount, ST.totalP),
+      blank(ST.totalL), blank(ST.totalL), blank(ST.totalL),
     ]);
   }
 
   rows.push(spacer(N));
 
-  // ── 5. Expenses ────────────────────────────────────────────────────────────
-  rows.push(sectionHeader("EXPENSES", N)); mergeRow(rows.length - 1);
+  rows.push(sectionHeader("STOCK CONSUMPTION", N)); mergeRow(rows.length - 1);
+  rows.push(["Material", "Total Consumed", "Sold Qty", "Scrap Qty", "Abandoned Qty", "Reject Qty", "Stock Added", "Remaining"].map((h) => c(h, ST.colHdr)));
 
-  // Single unified expenses table: title, category, amount, remarks, material (if stock-linked)
-  const expHdrs = ["Title", "Category", "Amount (₱)", "Remarks", "Linked Material", "", "", ""];
-  rows.push(expHdrs.map((h) => c(h, ST.colHdr)));
+  const stockConsumption = detail?.stockConsumption || [];
+  let stockTotalConsumed = 0;
+  let stockTotalSold = 0;
+  let stockTotalScrap = 0;
+  let stockTotalAbandoned = 0;
+  let stockTotalReject = 0;
+  let stockTotalAdded = 0;
+  let stockTotalRemaining = 0;
 
-  // Merge both arrays — generalExpenses have no materialName, stockExpenses do
-  const allExpenses = [
-    ...(detail?.generalExpenses || []).map((e) => ({
-      title:        e.title    || "—",
-      category:     e.category || "—",
-      amount:       e.amount   ?? e.totalAmount ?? 0,
-      remarks:      e.remarks  || "—",
-      materialName: "—",
-    })),
-    ...(detail?.stockExpenses || []).map((e) => ({
-      title:        e.title        || "—",
-      category:     e.category     || "—",
-      amount:       e.amount       ?? 0,
-      remarks:      e.remarks      || "—",
-      materialName: e.materialName || "—",
-    })),
-  ];
+  stockConsumption.forEach((item, index) => {
+    const alt = index % 2 === 1;
+    rows.push([
+      c(item.name || "Untitled", alt ? ST.altBody : ST.body),
+      c(item.totalConsumed ?? 0, alt ? ST.altQty : ST.bodyQty),
+      c(item.soldQty ?? 0, alt ? ST.altQty : ST.bodyQty),
+      c(item.scrapQty ?? 0, alt ? ST.altQty : ST.bodyQty),
+      c(item.abandonedQty ?? 0, alt ? ST.altQty : ST.bodyQty),
+      c(item.rejectQty ?? 0, alt ? ST.altQty : ST.bodyQty),
+      c(item.stockAdded ?? 0, alt ? ST.altQty : ST.bodyQty),
+      c(item.remainingStock ?? 0, alt ? ST.altQty : ST.bodyQty),
+    ]);
+    stockTotalConsumed += item.totalConsumed ?? 0;
+    stockTotalSold += item.soldQty ?? 0;
+    stockTotalScrap += item.scrapQty ?? 0;
+    stockTotalAbandoned += item.abandonedQty ?? 0;
+    stockTotalReject += item.rejectQty ?? 0;
+    stockTotalAdded += item.stockAdded ?? 0;
+    stockTotalRemaining += item.remainingStock ?? 0;
+  });
 
-  let expTotal = 0;
-
-  if (allExpenses.length === 0) {
-    rows.push(pad([c("No expenses for this period.", ST.body)], N)); mergeRow(rows.length - 1);
+  if (stockConsumption.length === 0) {
+    rows.push(pad([c("No stock consumption in this period.", ST.body)], N)); mergeRow(rows.length - 1);
+  } else {
+    rows.push([
+      c("TOTAL", ST.totalL),
+      c(stockTotalConsumed, ST.total),
+      c(stockTotalSold, ST.total),
+      c(stockTotalScrap, ST.total),
+      c(stockTotalAbandoned, ST.total),
+      c(stockTotalReject, ST.total),
+      c(stockTotalAdded, ST.total),
+      c(stockTotalRemaining, ST.total),
+    ]);
   }
 
-  allExpenses.forEach((e, i) => {
-    const alt = i % 2 === 1;
+  rows.push(spacer(N));
+
+  rows.push(sectionHeader("EXPENSES", N)); mergeRow(rows.length - 1);
+  rows.push(["Title", "Category", "Amount (₱)", "Remarks", "Linked Material", "", "", ""].map((h) => c(h, ST.colHdr)));
+
+  const expenses = detail?.expenses || [];
+  let expenseTotal = 0;
+
+  expenses.forEach((item, index) => {
+    const alt = index % 2 === 1;
     rows.push([
-      c(e.title,        alt ? ST.altBody : ST.body),
-      c(e.category,     alt ? ST.altBody : ST.body),
-      c(e.amount,       alt ? ST.altPeso : ST.bodyPeso),
-      c(e.remarks,      alt ? ST.altBody : ST.body),
-      c(e.materialName, alt ? ST.altBody : ST.body),
+      c(item.title || "—", alt ? ST.altBody : ST.body),
+      c(item.category || "—", alt ? ST.altBody : ST.body),
+      c(item.amount ?? 0, alt ? ST.altPeso : ST.bodyPeso),
+      c(item.remarks || "—", alt ? ST.altBody : ST.body),
+      c(item.linkedMaterial || "—", alt ? ST.altBody : ST.body),
       blank(), blank(), blank(),
     ]);
-    expTotal += e.amount;
+    expenseTotal += item.amount ?? 0;
   });
 
-  const expGrandTotal = detail?.totalExpenses ?? expTotal;
-  rows.push([
-    c("Total Expenses (₱)", ST.totalL),
-    blank(ST.totalL),
-    c(expGrandTotal, ST.totalP),
-    ...Array(N - 3).fill(blank(ST.totalL)),
-  ]);
+  if (expenses.length === 0) {
+    rows.push(pad([c("No expenses in this period.", ST.body)], N)); mergeRow(rows.length - 1);
+  } else {
+    rows.push([
+      c("Total Expenses (₱)", ST.totalL),
+      blank(ST.totalL),
+      c(expenseTotal, ST.totalP),
+      ...Array(N - 3).fill(blank(ST.totalL)),
+    ]);
+  }
 
   rows.push(spacer(N));
 
-  // ── 6. Profit / Loss Summary ───────────────────────────────────────────────
-  rows.push(sectionHeader("PROFIT / LOSS SUMMARY", N)); mergeRow(rows.length - 1);
-
-  const revenue  = detail?.revenue       ?? detail?.totalSalesAmount ?? 0;
-  const totalExp = detail?.totalExpenses ?? 0;
-  const net      = detail?.netProfitLoss ?? (revenue - totalExp);
-
-  const plItems = [
-    ["Revenue (PAID sales)", revenue],
-    ["Total Expenses",       totalExp],
-  ];
-
-  plItems.forEach(([label, value]) => {
-    rows.push([
-      c(label, ST.plRowL),
-      blank(),
-      c(value, ST.plRow),
-      ...Array(N - 3).fill(blank()),
-    ]);
-    merges.push({ s: { r: rows.length - 1, c: 0 }, e: { r: rows.length - 1, c: 1 } });
-    merges.push({ s: { r: rows.length - 1, c: 2 }, e: { r: rows.length - 1, c: N - 1 } });
-  });
-
-  // Divider
-  rows.push(pad([c("─────────────────────────────────────────", ST.meta)], N)); mergeRow(rows.length - 1);
-
-  // Net result row
-  let netLabelStyle, netValStyle;
-  let netLabel;
-  if (net > 0)       { netLabel = "NET PROFIT";  netLabelStyle = ST.profitL; netValStyle = ST.profit; }
-  else if (net < 0)  { netLabel = "NET LOSS";    netLabelStyle = ST.lossL;   netValStyle = ST.loss;   }
-  else               { netLabel = "BREAK EVEN";  netLabelStyle = ST.evenL;   netValStyle = ST.even;   }
-
-  rows.push([
-    c(netLabel, netLabelStyle),
-    blank(netLabelStyle),
-    c(net, netValStyle),
-    ...Array(N - 3).fill(blank(netLabelStyle)),
-  ]);
-  merges.push({ s: { r: rows.length - 1, c: 0 }, e: { r: rows.length - 1, c: 1 } });
-  merges.push({ s: { r: rows.length - 1, c: 2 }, e: { r: rows.length - 1, c: N - 1 } });
-
-  // ── Build worksheet ────────────────────────────────────────────────────────
   const ws = XLSX.utils.aoa_to_sheet(rows);
   ws["!merges"] = merges;
   ws["!cols"] = [
-    { wch: 30 }, // A – Material / Label
-    { wch: 16 }, // B
-    { wch: 18 }, // C
-    { wch: 16 }, // D
-    { wch: 16 }, // E
-    { wch: 14 }, // F
-    { wch: 18 }, // G
-    { wch: 16 }, // H
+    { wch: 30 },
+    { wch: 16 },
+    { wch: 16 },
+    { wch: 16 },
+    { wch: 18 },
+    { wch: 14 },
+    { wch: 14 },
+    { wch: 14 },
   ];
   ws["!rows"] = [
-    { hpt: 24 }, // title
-    { hpt: 18 }, // subtitle
+    { hpt: 24 },
+    { hpt: 18 },
     { hpt: 15 },
     { hpt: 15 },
     { hpt: 15 },

@@ -299,6 +299,10 @@ function YearGrid({ year, entriesMap, loading, selectedDate, onSelectMonth }) {
 // ─── Detail Panel ─────────────────────────────────────────────────────────────
 
 function DetailPanel({ detail, loading, selectedDate, type, onExport }) {
+  const salesRows = detail?.salesByMaterial || [];
+  const stockRows = detail?.stockConsumption || [];
+  const expenseRows = detail?.expenses || [];
+
   if (!selectedDate) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-md p-lg text-center">
@@ -317,8 +321,7 @@ function DetailPanel({ detail, loading, selectedDate, type, onExport }) {
   }
 
   return (
-    <div className="flex flex-col flex-1">
-      {/* Header */}
+    <div className="flex flex-col flex-1 overflow-y-auto">
       <div className="p-lg border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
         <div className="flex flex-col">
           <span className="font-headline-md text-headline-md uppercase tracking-tight">Detail</span>
@@ -334,14 +337,97 @@ function DetailPanel({ detail, loading, selectedDate, type, onExport }) {
         </button>
       </div>
 
-      {/* Summary */}
       <div className="p-lg grid grid-cols-2 gap-md border-b border-outline-variant">
-        <Stat label="Sales Amount" value={peso(detail?.totalSalesAmount)} />
+        <Stat label="Total Revenue" value={peso(detail?.totalRevenue ?? detail?.profitLossSummary?.revenue ?? 0)} />
         <Stat label="Sales Count" value={detail?.totalSalesCount ?? 0} />
-        <Stat label="Expenses" value={peso(detail?.totalExpenses)} />
-        <Stat label="Deleted Sales" value={detail?.deletedSalesCount ?? 0} error />
-        <Stat label="Deleted Stocks" value={detail?.deletedStocksCount ?? 0} error />
+        <Stat label="Pending Sales" value={detail?.pendingSalesCount ?? 0} />
+        <Stat label="Expenses" value={peso(detail?.totalExpenses ?? detail?.profitLossSummary?.totalExpenses ?? 0)} />
       </div>
+
+      <div className="p-lg flex flex-col gap-lg">
+        <SectionTable
+          title="Sales by Material"
+          columns={["Material", "Paid", "Pending", "Qty Consumed", "Sales Amount"]}
+          rows={salesRows}
+          renderRow={(row) => [
+            row.name || "Untitled",
+            row.paid ?? 0,
+            row.pending ?? 0,
+            row.qtyConsumed ?? 0,
+            peso(row.salesAmount ?? 0),
+          ]}
+          emptyText="No sales activity in this period."
+        />
+
+        <SectionTable
+          title="Stock Consumption"
+          columns={["Material", "Consumed", "Sold", "Scrap", "Abandoned", "Reject", "Added", "Remaining"]}
+          rows={stockRows}
+          renderRow={(row) => [
+            row.name || "Untitled",
+            row.totalConsumed ?? 0,
+            row.soldQty ?? 0,
+            row.scrapQty ?? 0,
+            row.abandonedQty ?? 0,
+            row.rejectQty ?? 0,
+            row.stockAdded ?? 0,
+            row.remainingStock ?? 0,
+          ]}
+          emptyText="No stock consumption in this period."
+        />
+
+        <SectionTable
+          title="Expenses"
+          columns={["Title", "Category", "Amount", "Remarks", "Linked Material"]}
+          rows={expenseRows}
+          renderRow={(row) => [
+            row.title || "—",
+            row.category || "—",
+            peso(row.amount ?? 0),
+            row.remarks || "—",
+            row.linkedMaterial || "—",
+          ]}
+          emptyText="No expenses in this period."
+        />
+      </div>
+    </div>
+  );
+}
+
+function SectionTable({ title, columns, rows, renderRow, emptyText }) {
+  return (
+    <div className="flex flex-col gap-sm">
+      <h3 className="font-label-md text-label-md uppercase tracking-widest text-on-surface-variant">{title}</h3>
+      {rows.length === 0 ? (
+        <div className="rounded-sm border border-outline-variant bg-surface-container-low p-md text-sm text-on-surface-variant">
+          {emptyText}
+        </div>
+      ) : (
+        <div className="overflow-x-auto border border-outline-variant bg-surface">
+          <table className="min-w-full text-left text-sm">
+            <thead className="bg-surface-container-low">
+              <tr>
+                {columns.map((column) => (
+                  <th key={column} className="px-sm py-xs font-label-md text-label-md uppercase tracking-widest text-on-surface-variant border-b border-outline-variant">
+                    {column}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, index) => (
+                <tr key={`${title}-${index}`} className={index % 2 === 0 ? "bg-surface" : "bg-surface-container-low/40"}>
+                  {renderRow(row).map((cell, cellIndex) => (
+                    <td key={`${title}-${index}-${cellIndex}`} className="px-sm py-xs border-b border-outline-variant last:border-b-0 align-top">
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
