@@ -21,3 +21,14 @@ export function getCalendarDetail(businessId, type, date, opts = {}) {
   qs.set("date", date);
   return apiRequest(`/api/businesses/${businessId}/calendar/detail?${qs.toString()}`, opts);
 }
+
+// Fetches the detailed breakdown for a custom date range.
+// `fromDate` = ISO date string (e.g. "2026-08-01")
+// `toDate` = ISO date string (e.g. "2026-08-20")
+// Returns per-material breakdown including stock, consumption, sales, deleted counts for the date range.
+export function getCalendarDetailRange(businessId, fromDate, toDate, opts = {}) {
+  const qs = new URLSearchParams();
+  qs.set("from", fromDate);
+  qs.set("to", toDate);
+  return apiRequest(`/api/businesses/${businessId}/calendar/detail?${qs.toString()}`, opts);
+}

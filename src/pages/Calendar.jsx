@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useActiveBusiness } from "../context/ActiveBusinessContext";
-import { useCalendarOverview, useCalendarDetail } from "../hooks/useCalendar";
+import { useCalendarOverview, useCalendarDetail, useCalendarDetailRange } from "../hooks/useCalendar";
 import { exportCalendarExcel } from "../utils/exportCalendarExcel";
+import DateRangeModal from "../components/calendar/DateRangeModal";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -64,8 +65,19 @@ function Calendar() {
   const detailType = view === "month" ? "day" : "month";
   const { detail, loading: detailLoading } = useCalendarDetail(businessId, detailType, selectedDate);
 
+  // Custom date range modal state
+  const [showDateRangeModal, setShowDateRangeModal] = useState(false);
+  const [customRange, setCustomRange] = useState({ fromDate: null, toDate: null });
+  const { detail: customRangeDetail, loading: customRangeLoading } = useCalendarDetailRange(
+    businessId,
+    customRange.fromDate,
+    customRange.toDate
+  );
+
   // Navigate months / years.
   const goPrev = () => {
+    if (customRange.fromDate) return; // Disable navigation in custom range mode
+    
     if (view === "month") {
       if (anchorMonth === 0) { setAnchorMonth(11); setAnchorYear((y) => y - 1); }
       else setAnchorMonth((m) => m - 1);
@@ -75,6 +87,8 @@ function Calendar() {
     setSelectedDate(null);
   };
   const goNext = () => {
+    if (customRange.fromDate) return; // Disable navigation in custom range mode
+    
     if (view === "month") {
       if (anchorMonth === 11) { setAnchorMonth(0); setAnchorYear((y) => y + 1); }
       else setAnchorMonth((m) => m + 1);
@@ -100,18 +114,44 @@ function Calendar() {
 
   // Excel export handler.
   const handleExport = () => {
-    if (!detail) return;
-    const fromDate = selectedDate || "";
-    let toDate = fromDate;
-    if (detailType === "month") {
-      // month → last day
-      const [y, m] = fromDate.split("-").map(Number);
-      const last = new Date(y, m, 0).getDate();
-      toDate = `${fromDate}-${last}`;
+    const exportDetail = customRange.fromDate ? customRangeDetail : detail;
+    if (!exportDetail) return;
+    
+    let fromDate, toDate, periodType;
+    
+    if (customRange.fromDate) {
+      // Custom range export
+      fromDate = customRange.fromDate;
+      toDate = customRange.toDate;
+      periodType = "Custom Range";
+    } else {
+      // Regular export
+      fromDate = selectedDate || "";
+      toDate = fromDate;
+      if (detailType === "month") {
+        // month → last day
+        const [y, m] = fromDate.split("-").map(Number);
+        const last = new Date(y, m, 0).getDate();
+        toDate = `${fromDate}-${last}`;
+      }
+      periodType = detailType === "day" ? "Daily" : "Monthly";
     }
+    
     const dateLabel = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
-    const periodType = detailType === "day" ? "Daily" : "Monthly";
-    exportCalendarExcel(detail, { businessName, dateLabel, fromDate, toDate, periodType });
+    exportCalendarExcel(exportDetail, { businessName, dateLabel, fromDate, toDate, periodType });
+  };
+
+  // Custom date range handler
+  const handleCustomRangeApply = (fromDate, toDate) => {
+    setCustomRange({ fromDate, toDate });
+    setShowDateRangeModal(false);
+    // Clear selected date when using custom range
+    setSelectedDate(null);
+  };
+
+  const handleClearCustomRange = () => {
+    setCustomRange({ fromDate: null, toDate: null });
+    setSelectedDate(null);
   };
 
   // No workspace.
@@ -147,23 +187,51 @@ function Calendar() {
           {/* View toggle */}
           <div className="flex border border-outline-variant">
             <button
-              onClick={() => { setView("month"); setSelectedDate(null); }}
+              onClick={() => { setView("month"); setSelectedDate(null); handleClearCustomRange(); }}
               className={`px-md py-sm font-label-md text-label-md uppercase tracking-widest transition-colors ${view === "month" ? "bg-primary text-on-primary" : "hover:bg-surface-container-low"}`}
             >This Month</button>
             <button
-              onClick={() => { setView("year"); setSelectedDate(null); }}
+              onClick={() => { setView("year"); setSelectedDate(null); handleClearCustomRange(); }}
               className={`px-md py-sm font-label-md text-label-md uppercase tracking-widest transition-colors ${view === "year" ? "bg-primary text-on-primary" : "hover:bg-surface-container-low"}`}
             >This Year</button>
           </div>
+          
+          {/* Custom date range button */}
+          <button
+            onClick={() => setShowDateRangeModal(true)}
+            className={`px-md py-sm font-label-md text-label-md uppercase tracking-widest border transition-colors ${
+              customRange.fromDate 
+                ? "bg-primary text-on-primary border-primary" 
+                : "bg-surface-container border-outline-variant text-on-surface hover:border-primary hover:text-primary"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px] align-middle mr-xs">date_range</span>
+            Custom Range
+          </button>
         </div>
 
         {/* Month/Year nav */}
         <div className="flex items-center gap-md">
-          <button onClick={goPrev} className="material-symbols-outlined text-on-surface-variant hover:text-primary">chevron_left</button>
+          <button 
+            onClick={goPrev} 
+            disabled={!!customRange.fromDate}
+            className={`material-symbols-outlined ${customRange.fromDate ? 'text-on-surface-variant/30 cursor-not-allowed' : 'text-on-surface-variant hover:text-primary'}`}
+          >
+            chevron_left
+          </button>
           <span className="font-headline-md text-headline-md text-primary min-w-[160px] text-center">
-            {view === "month" ? `${MONTH_NAMES[anchorMonth]} ${anchorYear}` : `${anchorYear}`}
+            {customRange.fromDate 
+              ? `${customRange.fromDate} to ${customRange.toDate}` 
+              : (view === "month" ? `${MONTH_NAMES[anchorMonth]} ${anchorYear}` : `${anchorYear}`)
+            }
           </span>
-          <button onClick={goNext} className="material-symbols-outlined text-on-surface-variant hover:text-primary">chevron_right</button>
+          <button 
+            onClick={goNext} 
+            disabled={!!customRange.fromDate}
+            className={`material-symbols-outlined ${customRange.fromDate ? 'text-on-surface-variant/30 cursor-not-allowed' : 'text-on-surface-variant hover:text-primary'}`}
+          >
+            chevron_right
+          </button>
         </div>
       </div>
 
@@ -171,7 +239,18 @@ function Calendar() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-md">
         {/* Calendar grid */}
         <div className="col-span-1 lg:col-span-8 bg-surface border border-outline-variant">
-          {view === "month" ? (
+          {customRange.fromDate ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-lg text-center min-h-[400px]">
+              <span className="material-symbols-outlined text-[48px] text-primary mb-md">date_range</span>
+              <h3 className="font-headline-md text-headline-md text-on-surface uppercase tracking-tight mb-sm">Custom Date Range Active</h3>
+              <p className="font-body-md text-on-surface-variant">
+                Viewing data from {customRange.fromDate} to {customRange.toDate}
+              </p>
+              <p className="font-body-sm text-on-surface-variant mt-sm">
+                Use the "Custom Range" button to modify or clear the current range.
+              </p>
+            </div>
+          ) : view === "month" ? (
             <MonthGrid
               year={anchorYear}
               month={anchorMonth}
@@ -200,14 +279,24 @@ function Calendar() {
         {/* Detail panel */}
         <div className="col-span-1 lg:col-span-4 bg-surface-container-lowest border border-outline-variant flex flex-col">
           <DetailPanel
-            detail={detail}
-            loading={detailLoading}
-            selectedDate={selectedDate}
-            type={detailType}
+            detail={customRange.fromDate ? customRangeDetail : detail}
+            loading={customRange.fromDate ? customRangeLoading : detailLoading}
+            selectedDate={customRange.fromDate ? `${customRange.fromDate} to ${customRange.toDate}` : selectedDate}
+            type={customRange.fromDate ? "Custom Range" : detailType}
             onExport={handleExport}
+            hasCustomRange={!!customRange.fromDate}
+            onClearCustomRange={handleClearCustomRange}
           />
         </div>
       </div>
+
+      {/* Custom Date Range Modal */}
+      {showDateRangeModal && (
+        <DateRangeModal
+          onClose={() => setShowDateRangeModal(false)}
+          onApply={handleCustomRangeApply}
+        />
+      )}
     </div>
   );
 }
@@ -298,12 +387,12 @@ function YearGrid({ year, entriesMap, loading, selectedDate, onSelectMonth }) {
 
 // ─── Detail Panel ─────────────────────────────────────────────────────────────
 
-function DetailPanel({ detail, loading, selectedDate, type, onExport }) {
+function DetailPanel({ detail, loading, selectedDate, type, onExport, hasCustomRange, onClearCustomRange }) {
   const salesRows = detail?.salesByMaterial || [];
   const stockRows = detail?.stockConsumption || [];
   const expenseRows = detail?.expenses || [];
 
-  if (!selectedDate) {
+  if (!selectedDate && !hasCustomRange) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-md p-lg text-center">
         <span className="material-symbols-outlined text-[48px] text-on-surface-variant/40">touch_app</span>
@@ -312,10 +401,18 @@ function DetailPanel({ detail, loading, selectedDate, type, onExport }) {
     );
   }
 
-  if (loading && !detail) {
+  if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center p-lg">
         <span className="material-symbols-outlined animate-spin text-primary">refresh</span>
+      </div>
+    );
+  }
+
+  if (!detail) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-lg">
+        <span className="font-body-md text-on-surface-variant">No data available for this period.</span>
       </div>
     );
   }
@@ -327,14 +424,25 @@ function DetailPanel({ detail, loading, selectedDate, type, onExport }) {
           <span className="font-headline-md text-headline-md uppercase tracking-tight">Detail</span>
           <span className="font-label-md text-label-md text-on-surface-variant">{selectedDate}</span>
         </div>
-        <button
-          onClick={onExport}
-          disabled={!detail}
-          className="flex items-center gap-xs px-md py-sm bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest hover:bg-surface hover:text-primary border border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span className="material-symbols-outlined text-[16px]">download</span>
-          Export
-        </button>
+        <div className="flex items-center gap-sm">
+          {hasCustomRange && (
+            <button
+              onClick={onClearCustomRange}
+              className="flex items-center gap-xs px-md py-sm border border-error text-error font-label-md text-label-md uppercase tracking-widest hover:bg-error-container transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]">close</span>
+              Clear
+            </button>
+          )}
+          <button
+            onClick={onExport}
+            disabled={!detail}
+            className="flex items-center gap-xs px-md py-sm bg-primary text-on-primary font-label-md text-label-md uppercase tracking-widest hover:bg-surface hover:text-primary border border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="material-symbols-outlined text-[16px]">download</span>
+            Export
+          </button>
+        </div>
       </div>
 
       <div className="p-lg grid grid-cols-2 gap-md border-b border-outline-variant">
@@ -347,30 +455,26 @@ function DetailPanel({ detail, loading, selectedDate, type, onExport }) {
       <div className="p-lg flex flex-col gap-lg">
         <SectionTable
           title="Sales by Material"
-          columns={["Material", "Paid", "Pending", "Qty Consumed", "Sales Amount"]}
+          columns={["Material", "Paid Qty", "Pending Qty", "Qty Consumed", "Sales Amount"]}
           rows={salesRows}
           renderRow={(row) => [
             row.name || "Untitled",
             row.paid ?? 0,
             row.pending ?? 0,
             row.qtyConsumed ?? 0,
-            peso(row.salesAmount ?? 0),
+            <span className="font-bold text-base">{peso(row.salesAmount ?? 0)}</span>,
           ]}
           emptyText="No sales activity in this period."
         />
 
         <SectionTable
           title="Stock Consumption"
-          columns={["Material", "Consumed", "Sold", "Scrap", "Abandoned", "Reject", "Added", "Remaining"]}
+          columns={["Material", "Stock Added", "Consumed", "Remaining"]}
           rows={stockRows}
           renderRow={(row) => [
             row.name || "Untitled",
-            row.totalConsumed ?? 0,
-            row.soldQty ?? 0,
-            row.scrapQty ?? 0,
-            row.abandonedQty ?? 0,
-            row.rejectQty ?? 0,
             row.stockAdded ?? 0,
+            row.totalConsumed ?? 0,
             row.remainingStock ?? 0,
           ]}
           emptyText="No stock consumption in this period."
@@ -378,14 +482,13 @@ function DetailPanel({ detail, loading, selectedDate, type, onExport }) {
 
         <SectionTable
           title="Expenses"
-          columns={["Title", "Category", "Amount", "Remarks", "Linked Material"]}
+          columns={["Title", "Category", "Remarks", "Amount"]}
           rows={expenseRows}
           renderRow={(row) => [
             row.title || "—",
             row.category || "—",
-            peso(row.amount ?? 0),
             row.remarks || "—",
-            row.linkedMaterial || "—",
+            <span className="font-bold text-base">{peso(row.amount ?? 0)}</span>,
           ]}
           emptyText="No expenses in this period."
         />
@@ -407,8 +510,12 @@ function SectionTable({ title, columns, rows, renderRow, emptyText }) {
           <table className="min-w-full text-left text-sm">
             <thead className="bg-surface-container-low">
               <tr>
-                {columns.map((column) => (
-                  <th key={column} className="px-sm py-xs font-label-md text-label-md uppercase tracking-widest text-on-surface-variant border-b border-outline-variant">
+                {columns.map((column, index) => (
+                  <th 
+                    key={`${column}-${index}`} 
+                    className="px-sm py-xs font-label-md text-label-md uppercase tracking-widest text-on-surface-variant border-b border-outline-variant"
+                    style={column === "Remarks" ? { minWidth: "200px", width: "200px" } : {}}
+                  >
                     {column}
                   </th>
                 ))}
@@ -418,7 +525,11 @@ function SectionTable({ title, columns, rows, renderRow, emptyText }) {
               {rows.map((row, index) => (
                 <tr key={`${title}-${index}`} className={index % 2 === 0 ? "bg-surface" : "bg-surface-container-low/40"}>
                   {renderRow(row).map((cell, cellIndex) => (
-                    <td key={`${title}-${index}-${cellIndex}`} className="px-sm py-xs border-b border-outline-variant last:border-b-0 align-top">
+                    <td 
+                      key={`${title}-${index}-${cellIndex}`} 
+                      className="px-sm py-xs border-b border-outline-variant last:border-b-0 align-top"
+                      style={columns[cellIndex] === "Remarks" ? { minWidth: "200px", width: "200px" } : {}}
+                    >
                       {cell}
                     </td>
                   ))}

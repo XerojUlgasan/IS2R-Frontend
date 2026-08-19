@@ -77,6 +77,9 @@ const ST = {
   plRow:      s({ font: { name: "Arial", sz: 10, bold: true }, alignment: { horizontal: "right", vertical: "center" }, numFmt: PESO }),
   plRowL:     s({ font: { name: "Arial", sz: 10, bold: true } }),
   empty:      { v: "", t: "s", s: {} },
+  // Bold and bigger font styles for important columns
+  boldAmount: s({ font: { name: "Arial", sz: 12, bold: true }, alignment: { horizontal: "right", vertical: "center" }, numFmt: PESO }),
+  altBoldAmount: s({ font: { name: "Arial", sz: 12, bold: true }, fill: C.ALT, alignment: { horizontal: "right", vertical: "center" }, numFmt: PESO }),
 };
 
 // ─── Cell helper ──────────────────────────────────────────────────────────────
@@ -112,7 +115,8 @@ export function exportCalendarExcel(detail, meta = {}) {
     periodType = "",
   } = meta;
 
-  const N = 8;
+  // Vertical layout: all sections start at column A
+  const N = 5; // 5 columns for all sections
   const rows = [];
   const merges = [];
 
@@ -120,6 +124,7 @@ export function exportCalendarExcel(detail, meta = {}) {
     merges.push({ s: { r, c: c1 }, e: { r, c: c2 } });
   }
 
+  // Header rows (span full width)
   rows.push(pad([c(businessName, ST.title)], N)); mergeRow(rows.length - 1);
   rows.push(pad([c("Sales Calendar Report", ST.subtitle)], N)); mergeRow(rows.length - 1);
   rows.push(pad([c(`Generated: ${dateLabel}`, ST.meta)], N)); mergeRow(rows.length - 1);
@@ -127,6 +132,7 @@ export function exportCalendarExcel(detail, meta = {}) {
   rows.push(pad([c(`Period Type: ${periodType || (fromDate === toDate ? "Daily" : "Monthly")}`, ST.meta)], N)); mergeRow(rows.length - 1);
   rows.push(spacer(N));
 
+  // SUMMARY
   rows.push(sectionHeader("SUMMARY", N)); mergeRow(rows.length - 1);
 
   const summaryItems = [
@@ -147,8 +153,15 @@ export function exportCalendarExcel(detail, meta = {}) {
 
   rows.push(spacer(N));
 
-  rows.push(sectionHeader("SALES BY MATERIAL", N)); mergeRow(rows.length - 1);
-  rows.push(["Material", "Paid", "Pending", "Qty Consumed", "Sales Amount (₱)", "", "", ""].map((h) => c(h, ST.colHdr)));
+  // SALES BY MATERIAL - Updated columns
+  rows.push(sectionHeader("SALES", N)); mergeRow(rows.length - 1);
+  rows.push([
+    c("Material", ST.colHdr),
+    c("Paid Qty", ST.colHdr),
+    c("Pending Qty", ST.colHdr),
+    c("Qty Consumed", ST.colHdr),
+    c("Sales Amount", ST.colHdr),
+  ]);
 
   const salesByMaterial = detail?.salesByMaterial || [];
   let salesTotalPaid = 0;
@@ -163,8 +176,7 @@ export function exportCalendarExcel(detail, meta = {}) {
       c(item.paid ?? 0, alt ? ST.altInt : ST.bodyInt),
       c(item.pending ?? 0, alt ? ST.altInt : ST.bodyInt),
       c(item.qtyConsumed ?? 0, alt ? ST.altQty : ST.bodyQty),
-      c(item.salesAmount ?? 0, alt ? ST.altPeso : ST.bodyPeso),
-      blank(), blank(), blank(),
+      c(item.salesAmount ?? 0, alt ? ST.altBoldAmount : ST.boldAmount),
     ]);
     salesTotalPaid += item.paid ?? 0;
     salesTotalPending += item.pending ?? 0;
@@ -181,64 +193,20 @@ export function exportCalendarExcel(detail, meta = {}) {
       c(salesTotalPending, ST.total),
       c(salesTotalQty, ST.total),
       c(salesTotalAmount, ST.totalP),
-      blank(ST.totalL), blank(ST.totalL), blank(ST.totalL),
     ]);
   }
 
   rows.push(spacer(N));
 
-  rows.push(sectionHeader("STOCK CONSUMPTION", N)); mergeRow(rows.length - 1);
-  rows.push(["Material", "Total Consumed", "Sold Qty", "Scrap Qty", "Abandoned Qty", "Reject Qty", "Stock Added", "Remaining"].map((h) => c(h, ST.colHdr)));
-
-  const stockConsumption = detail?.stockConsumption || [];
-  let stockTotalConsumed = 0;
-  let stockTotalSold = 0;
-  let stockTotalScrap = 0;
-  let stockTotalAbandoned = 0;
-  let stockTotalReject = 0;
-  let stockTotalAdded = 0;
-  let stockTotalRemaining = 0;
-
-  stockConsumption.forEach((item, index) => {
-    const alt = index % 2 === 1;
-    rows.push([
-      c(item.name || "Untitled", alt ? ST.altBody : ST.body),
-      c(item.totalConsumed ?? 0, alt ? ST.altQty : ST.bodyQty),
-      c(item.soldQty ?? 0, alt ? ST.altQty : ST.bodyQty),
-      c(item.scrapQty ?? 0, alt ? ST.altQty : ST.bodyQty),
-      c(item.abandonedQty ?? 0, alt ? ST.altQty : ST.bodyQty),
-      c(item.rejectQty ?? 0, alt ? ST.altQty : ST.bodyQty),
-      c(item.stockAdded ?? 0, alt ? ST.altQty : ST.bodyQty),
-      c(item.remainingStock ?? 0, alt ? ST.altQty : ST.bodyQty),
-    ]);
-    stockTotalConsumed += item.totalConsumed ?? 0;
-    stockTotalSold += item.soldQty ?? 0;
-    stockTotalScrap += item.scrapQty ?? 0;
-    stockTotalAbandoned += item.abandonedQty ?? 0;
-    stockTotalReject += item.rejectQty ?? 0;
-    stockTotalAdded += item.stockAdded ?? 0;
-    stockTotalRemaining += item.remainingStock ?? 0;
-  });
-
-  if (stockConsumption.length === 0) {
-    rows.push(pad([c("No stock consumption in this period.", ST.body)], N)); mergeRow(rows.length - 1);
-  } else {
-    rows.push([
-      c("TOTAL", ST.totalL),
-      c(stockTotalConsumed, ST.total),
-      c(stockTotalSold, ST.total),
-      c(stockTotalScrap, ST.total),
-      c(stockTotalAbandoned, ST.total),
-      c(stockTotalReject, ST.total),
-      c(stockTotalAdded, ST.total),
-      c(stockTotalRemaining, ST.total),
-    ]);
-  }
-
-  rows.push(spacer(N));
-
+  // EXPENSES - Updated columns
   rows.push(sectionHeader("EXPENSES", N)); mergeRow(rows.length - 1);
-  rows.push(["Title", "Category", "Amount (₱)", "Remarks", "Linked Material", "", "", ""].map((h) => c(h, ST.colHdr)));
+  rows.push([
+    c("Title", ST.colHdr),
+    c("Category", ST.colHdr),
+    c("Remarks", ST.colHdr),
+    c("Remarks", ST.colHdr),
+    c("Amount", ST.colHdr),
+  ]);
 
   const expenses = detail?.expenses || [];
   let expenseTotal = 0;
@@ -248,10 +216,9 @@ export function exportCalendarExcel(detail, meta = {}) {
     rows.push([
       c(item.title || "—", alt ? ST.altBody : ST.body),
       c(item.category || "—", alt ? ST.altBody : ST.body),
-      c(item.amount ?? 0, alt ? ST.altPeso : ST.bodyPeso),
       c(item.remarks || "—", alt ? ST.altBody : ST.body),
-      c(item.linkedMaterial || "—", alt ? ST.altBody : ST.body),
-      blank(), blank(), blank(),
+      blank(alt ? ST.altBody : ST.body),
+      c(item.amount ?? 0, alt ? ST.altBoldAmount : ST.boldAmount),
     ]);
     expenseTotal += item.amount ?? 0;
   });
@@ -260,10 +227,54 @@ export function exportCalendarExcel(detail, meta = {}) {
     rows.push(pad([c("No expenses in this period.", ST.body)], N)); mergeRow(rows.length - 1);
   } else {
     rows.push([
-      c("Total Expenses (₱)", ST.totalL),
+      c("Total Expenses", ST.totalL),
+      blank(ST.totalL),
+      blank(ST.totalL),
       blank(ST.totalL),
       c(expenseTotal, ST.totalP),
-      ...Array(N - 3).fill(blank(ST.totalL)),
+    ]);
+  }
+
+  rows.push(spacer(N));
+
+  // STOCK CONSUMPTION - Updated columns
+  rows.push(sectionHeader("STOCK CONSUMPTION", N)); mergeRow(rows.length - 1);
+  rows.push([
+    c("Material", ST.colHdr),
+    c("Stock Added", ST.colHdr),
+    c("Consumed", ST.colHdr),
+    c("Remaining", ST.colHdr),
+    blank(ST.colHdr),
+  ]);
+
+  const stockConsumption = detail?.stockConsumption || [];
+  let stockTotalAdded = 0;
+  let stockTotalConsumed = 0;
+  let stockTotalRemaining = 0;
+
+  stockConsumption.forEach((item, index) => {
+    const alt = index % 2 === 1;
+    rows.push([
+      c(item.name || "Untitled", alt ? ST.altBody : ST.body),
+      c(item.stockAdded ?? 0, alt ? ST.altQty : ST.bodyQty),
+      c(item.totalConsumed ?? 0, alt ? ST.altQty : ST.bodyQty),
+      c(item.remainingStock ?? 0, alt ? ST.altQty : ST.bodyQty),
+      blank(alt ? ST.altBody : ST.body),
+    ]);
+    stockTotalAdded += item.stockAdded ?? 0;
+    stockTotalConsumed += item.totalConsumed ?? 0;
+    stockTotalRemaining += item.remainingStock ?? 0;
+  });
+
+  if (stockConsumption.length === 0) {
+    rows.push(pad([c("No stock consumption in this period.", ST.body)], N)); mergeRow(rows.length - 1);
+  } else {
+    rows.push([
+      c("TOTAL", ST.totalL),
+      c(stockTotalAdded, ST.total),
+      c(stockTotalConsumed, ST.total),
+      c(stockTotalRemaining, ST.total),
+      blank(ST.totalL),
     ]);
   }
 
@@ -272,14 +283,11 @@ export function exportCalendarExcel(detail, meta = {}) {
   const ws = XLSX.utils.aoa_to_sheet(rows);
   ws["!merges"] = merges;
   ws["!cols"] = [
-    { wch: 30 },
-    { wch: 16 },
-    { wch: 16 },
-    { wch: 16 },
-    { wch: 18 },
-    { wch: 14 },
-    { wch: 14 },
-    { wch: 14 },
+    { wch: 30 },  // Material
+    { wch: 12 },  // Paid Qty / Stock Added
+    { wch: 12 },  // Pending Qty / Consumed
+    { wch: 12 },  // Qty Consumed / Remaining
+    { wch: 16 },  // Sales Amount (blank for stock)
   ];
   ws["!rows"] = [
     { hpt: 24 },
